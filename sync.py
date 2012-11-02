@@ -24,6 +24,8 @@ import string
 import configparser 
 from subprocess import *
 
+sudo = False
+
 def command(x):
   return str(Popen(x.split(' '), stdout=PIPE).communicate()[0])
 
@@ -33,11 +35,17 @@ def pretty(msg):
   ss = msg.split("\n")
   for s in ss: 
     if not s.startswith("b"): print(s)
+    
+def cmd(q):
+  if sudo:
+    return command("".join(["sudo ", q]))
+  else:
+    return command(q)
 
-def gitPull(): pretty(command("git pull origin master"))
-def gitFetchUpstream(): pretty(command("git fetch upstream master"))
-def gitRebase(): pretty(command("git pull --rebase upstream master"))
-def gitForcePush(): pretty(command("git push -f origin master"))
+def gitPull(): pretty(cmd("git pull origin master"))
+def gitFetchUpstream(): pretty(cmd("git fetch upstream master"))
+def gitRebase(): pretty(cmd("git pull --rebase upstream master"))
+def gitForcePush(): pretty(cmd("git push -f origin master"))
 
 def gitUntracked():
   status = command("git status")
@@ -67,11 +75,17 @@ def sync(repo):
   gitFetchUpstream()
   gitRebase()
   gitForcePush()
+  
+def syncrepos(repos):
+  for r in repos.split("\n"):
+    if r:
+      print("Repo: ", r)
+      sync(r)
 
 config = configparser.ConfigParser()
 config.readfp(open('repolist.conf'))
-repos = config.get('General','repositories')
-for r in repos.split("\n"):
-  if r:
-    print("Repo: ", r)
-    sync(r)
+user = config.get('Repos','user')
+root = config.get('Repos','sudo')
+syncrepos(user)
+sudo = True
+syncrepos(root)
