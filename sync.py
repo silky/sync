@@ -100,7 +100,7 @@ def syncrepos(repos):
       sync(r)
 
 config = configparser.ConfigParser()
-config.readfp(open('repolist.conf'))
+config.readfp(open('/etc/conf.d/repolist.conf'))
 user = config.get('Repos','user')
 root = config.get('Repos','sudo')
 syncrepos(user)
