@@ -101,7 +101,7 @@ def syncrepos(repos):
 
 config = configparser.ConfigParser()
 config.readfp(open('/etc/conf.d/repolist.conf'))
-if os.geteuid() != 0:
+if os.geteuid() == 0:
   print("warning: running from root, only root repositories is syncing")
 else:
   user = config.get('Repos','user')
