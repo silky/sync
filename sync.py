@@ -42,10 +42,11 @@ def cmd(q):
   else:
     return command(q)
 
-def gitPull(): pretty(cmd("git pull origin master"))
-def gitFetchUpstream(): pretty(cmd("git fetch upstream master"))
-def gitRebase(): pretty(cmd("git pull --rebase upstream master"))
-def gitForcePush(): pretty(cmd("git push -f origin master"))
+def gitSync(): 
+  pretty(cmd("git pull origin master"))
+  pretty(cmd("git fetch upstream master"))
+  pretty(cmd("git pull --rebase upstream master"))
+  pretty(cmd("git push -f origin master"))
 
 def gitUntracked():
   status = command("git status")
@@ -71,10 +72,7 @@ def checkGitModifications():
 def sync(repo):
   os.chdir(repo)
   checkGitModifications()
-  gitPull()
-  gitFetchUpstream()
-  gitRebase()
-  gitForcePush()
+  gitSync()
   
 def syncrepos(repos):
   for r in repos.split("\n"):
