@@ -101,8 +101,11 @@ def syncrepos(repos):
 
 config = configparser.ConfigParser()
 config.readfp(open('/etc/conf.d/repolist.conf'))
-user = config.get('Repos','user')
+if os.geteuid() != 0:
+  print("wrning: running from root, only root repositories is syncing")
+else:
+  user = config.get('Repos','user')
+  syncrepos(user)
+  sudo = True
 root = config.get('Repos','sudo')
-syncrepos(user)
-sudo = True
 syncrepos(root)

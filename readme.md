@@ -44,3 +44,8 @@ From git://git.exherbo.org/paludis/paludis
  * branch            master     -> FETCH_HEAD
 Everything up-to-date
 ```
+
+Installation
+============
+
+in gentoo you can install it from my overlay (layman -a shame & emerge sync)
