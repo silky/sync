@@ -1,4 +1,4 @@
-Sync is which will help you to keep your forks up to date!
+Sync is util which will help you to keep your forks up to date!
 
 Just, create config alike
 
@@ -15,7 +15,7 @@ sudo:
   /usr/src/kernel -t git
 ```
 
-adn run sync.
+and run sync.
 
 it will be look alike that:
 
