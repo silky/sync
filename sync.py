@@ -24,18 +24,20 @@ import string
 import configparser 
 from subprocess import *
 
-sudo = False
+class VCS:
+  git=1
+  mercurial=2
+  subversion=3
+  veracity=4
 
 def command(x):
   return str(Popen(x.split(' '), stdout=PIPE).communicate()[0])
-
 def rm_empty(L): return [l for l in L if (l and l!="")]
-
 def pretty(msg):
   ss = msg.split("\n")
   for s in ss: 
     if not s.startswith("b"): print(s)
-    
+sudo = False
 def cmd(q):
   if sudo:
     return command("".join(["sudo ", q]))
@@ -70,9 +72,26 @@ def checkGitModifications():
   print("Modified:", gitModified())
 
 def sync(repo):
-  os.chdir(repo)
+  r = repo.split("-t")
+  path = (r[0]).strip()
+  if len(r) < 2:
+    vcs = VCS.git
+  else:
+    vcs = {
+      'git' 		: VCS.git,
+      'mercurial' 	: VCS.mercurial,
+      'subversion' 	: VCS.subversion,
+      'veracity' 	: VCS.veracity}[(r[1]).strip()]
+  os.chdir(path)
   checkGitModifications()
-  gitSync()
+  if vcs == VCS.git:
+    gitSync()
+  elif vcs == VCS.mercurial:
+    print ( "can't sync mercurial yet")
+  elif vcs == VCS.subversion:
+    print ( "can't sync subversion yet")
+  elif vcs == VCS.veracity:
+    print ( "can't sync veracity yet")
   
 def syncrepos(repos):
   for r in repos.split("\n"):
