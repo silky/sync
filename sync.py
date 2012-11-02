@@ -83,8 +83,8 @@ def sync(repo):
       'subversion' 	: VCS.subversion,
       'veracity' 	: VCS.veracity}[(r[1]).strip()]
   os.chdir(path)
-  checkGitModifications()
   if vcs == VCS.git:
+    checkGitModifications()
     gitSync()
   elif vcs == VCS.mercurial:
     print ( "can't sync mercurial yet")
