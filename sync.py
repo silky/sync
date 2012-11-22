@@ -25,6 +25,7 @@ import configparser
 from subprocess import *
 
 class VCS:
+  git=0
   git_git=1
   git_mercurial=2
   git_subversion=3
@@ -50,7 +51,14 @@ def gitSync():
   pretty(cmd("git pull --rebase upstream master"))
   pretty(cmd("git push -f origin master"))
   
+def gitgitSync(): 
+  pretty(cmd("git pull origin master"))
+  pretty(cmd("git fetch git master"))
+  pretty(cmd("git push -f git master"))
+  
 def githgSync():
+  pretty(cmd("hg pull"))
+  pretty(cmd("hg update"))
   pretty(cmd("hg push git"))
 
 def gitUntracked():
@@ -78,32 +86,36 @@ def sync(repo):
   r = repo.split("-t")
   path = (r[0]).strip()
   if len(r) < 2:
-    vcs = VCS.git_git
+    vcs = VCS.git
   else:
     vcs = {
+      'git' 		: VCS.git,
       'git git' 	: VCS.git_git,
       'git hg' 		: VCS.git_mercurial,
       'git svn' 	: VCS.git_subversion,
       'git vv' 		: VCS.git_veracity}[(r[1]).strip()]
   os.chdir(path)
-  if vcs == VCS.git_git:
+  if vcs == VCS.git:
     checkGitModifications()
     gitSync()
+  elif vcs == VCS.git_git:
+    gitgitSync();
   elif vcs == VCS.git_mercurial:
     githgSync();
   elif vcs == VCS.git_subversion:
     print ( "can't sync git from subversion yet")
   elif vcs == VCS.git_veracity:
     print ( "can't sync git from veracity yet")
+  print("________________________________________________________")
   
 def syncrepos(repos):
   for r in repos.split("\n"):
     if r:
-      print("Repo: ", r)
+      print("------ repository: ", r)
       sync(r)
-print("================================================")
-print("  sync: Global repositories synchronizer v.0.1  ")
-print("================================================")
+print("====================================================================")
+print("            sync: Global repositories synchronizer v.0.2  ")
+print("====================================================================")
 config = configparser.ConfigParser()
 config.readfp(open('/etc/conf.d/repolist.conf'))
 if os.geteuid() == 0:
