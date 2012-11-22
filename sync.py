@@ -25,10 +25,10 @@ import configparser
 from subprocess import *
 
 class VCS:
-  git=1
-  mercurial=2
-  subversion=3
-  veracity=4
+  git_git=1
+  git_mercurial=2
+  git_subversion=3
+  git_veracity=4
 
 def command(x):
   return str(Popen(x.split(' '), stdout=PIPE).communicate()[0])
@@ -49,6 +49,12 @@ def gitSync():
   pretty(cmd("git fetch upstream master"))
   pretty(cmd("git pull --rebase upstream master"))
   pretty(cmd("git push -f origin master"))
+  
+def githgSync():
+  pretty(cmd("hg pull master"))
+  pretty(cmd("hg pull upstream master"))
+  pretty(cmd("hg update"))
+  pretty(cmd("hg push master"))
 
 def gitUntracked():
   status = command("git status")
@@ -75,30 +81,32 @@ def sync(repo):
   r = repo.split("-t")
   path = (r[0]).strip()
   if len(r) < 2:
-    vcs = VCS.git
+    vcs = VCS.git_git
   else:
     vcs = {
-      'git' 		: VCS.git,
-      'mercurial' 	: VCS.mercurial,
-      'subversion' 	: VCS.subversion,
-      'veracity' 	: VCS.veracity}[(r[1]).strip()]
+      'git git' 	: VCS.git_git,
+      'git hg' 		: VCS.git_mercurial,
+      'git svn' 	: VCS.git_subversion,
+      'git vv' 		: VCS.git_veracity}[(r[1]).strip()]
   os.chdir(path)
-  if vcs == VCS.git:
+  if vcs == VCS.git_git:
     checkGitModifications()
     gitSync()
-  elif vcs == VCS.mercurial:
-    print ( "can't sync mercurial yet")
-  elif vcs == VCS.subversion:
-    print ( "can't sync subversion yet")
-  elif vcs == VCS.veracity:
-    print ( "can't sync veracity yet")
+  elif vcs == VCS.git_mercurial:
+    githgSync();
+  elif vcs == VCS.git_subversion:
+    print ( "can't sync git from subversion yet")
+  elif vcs == VCS.git_veracity:
+    print ( "can't sync git from veracity yet")
   
 def syncrepos(repos):
   for r in repos.split("\n"):
     if r:
       print("Repo: ", r)
       sync(r)
-
+print("================================================")
+print("  sync: Global repositories synchronizer v.0.1  ")
+print("================================================")
 config = configparser.ConfigParser()
 config.readfp(open('/etc/conf.d/repolist.conf'))
 if os.geteuid() == 0:

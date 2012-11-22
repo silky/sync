@@ -5,17 +5,19 @@ Just, create config alike
 ``` shell
 [Repos]
 user: 
-  /home/nen/contrib/portage -t git
-  /home/nen/contrib/paludis -t git
-  /home/nen/contrib/uemacs -t git
+  /home/nen/contrib/portage -t git git
+  /home/nen/contrib/paludis -t hg git
+  /home/nen/contrib/uemacs
 sudo:
-  /home/nen/contrib/buildroot -t git
-  /home/gentoo-haskell -t git
-  /home/gentoo-kde -t git
-  /usr/src/kernel -t git
+  /home/nen/contrib/buildroot -t git git
+  /home/gentoo-haskell
+  /home/gentoo-kde
+  /usr/src/kernel
 ```
 
-and run sync.
+(git git is default)
+
+and run sync. [not that it can't setup repos for you yet]
 
 it will be look alike that:
 
@@ -48,4 +50,4 @@ Everything up-to-date
 Installation
 ============
 
-in gentoo you can install it from my overlay (layman -a shame & emerge sync)
+in gentoo you can install it from my overlay + emerge sync
