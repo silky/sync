@@ -51,10 +51,7 @@ def gitSync():
   pretty(cmd("git push -f origin master"))
   
 def githgSync():
-  pretty(cmd("hg pull master"))
-  pretty(cmd("hg pull upstream master"))
-  pretty(cmd("hg update"))
-  pretty(cmd("hg push master"))
+  pretty(cmd("hg push git"))
 
 def gitUntracked():
   status = command("git status")
