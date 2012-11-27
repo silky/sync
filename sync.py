@@ -30,6 +30,7 @@ class VCS:
   git_mercurial=2
   git_subversion=3
   git_veracity=4
+  hg_hg=5
 
 def command(x):
   return str(Popen(x.split(' '), stdout=PIPE).communicate()[0])
@@ -61,6 +62,11 @@ def githgSync():
   pretty(cmd("hg update"))
   pretty(cmd("hg push git"))
 
+def hghgSync()
+  pretty(cmd("hg pull"))
+  pretty(cmd("hg update"))
+  pretty(cmd("hg push hg"))
+  
 def gitUntracked():
   status = command("git status")
   if "# Untracked files:" in status:
@@ -93,7 +99,8 @@ def sync(repo):
       'git git' 	: VCS.git_git,
       'git hg' 		: VCS.git_mercurial,
       'git svn' 	: VCS.git_subversion,
-      'git vv' 		: VCS.git_veracity}[(r[1]).strip()]
+      'git vv' 		: VCS.git_veracity
+      'hg hg'       : VCS.hg_hg}[(r[1]).strip()]
   os.chdir(path)
   if vcs == VCS.git:
     checkGitModifications()
@@ -106,6 +113,11 @@ def sync(repo):
     print ( "can't sync git from subversion yet")
   elif vcs == VCS.git_veracity:
     print ( "can't sync git from veracity yet")
+    print ( "you can do it manually by using:")
+    print ( "vv fast-export proj proj.vci")
+    print ( "git fast-import < proj.vci")
+  elif vcs == VCS.hg_hg:
+    hghgSync();
   print("________________________________________________________")
   
 def syncrepos(repos):
@@ -114,7 +126,7 @@ def syncrepos(repos):
       print("------ repository: ", r)
       sync(r)
 print("====================================================================")
-print("            sync: Global repositories synchronizer v.0.2  ")
+print("            sync: Global repositories synchronizer v.0.3  ")
 print("====================================================================")
 config = configparser.ConfigParser()
 config.readfp(open('/etc/conf.d/repolist.conf'))
