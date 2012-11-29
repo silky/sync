@@ -62,7 +62,7 @@ def githgSync():
   pretty(cmd("hg update"))
   pretty(cmd("hg push git"))
 
-def hghgSync()
+def hghgSync():
   pretty(cmd("hg pull"))
   pretty(cmd("hg update"))
   pretty(cmd("hg push hg"))
