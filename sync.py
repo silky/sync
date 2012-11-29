@@ -99,7 +99,7 @@ def sync(repo):
       'git git' 	: VCS.git_git,
       'git hg' 		: VCS.git_mercurial,
       'git svn' 	: VCS.git_subversion,
-      'git vv' 		: VCS.git_veracity
+      'git vv' 		: VCS.git_veracity,
       'hg hg'       : VCS.hg_hg}[(r[1]).strip()]
   os.chdir(path)
   if vcs == VCS.git:
