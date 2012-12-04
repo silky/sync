@@ -1,23 +1,28 @@
 Sync is util which will help you to keep your forks up to date!
 
-Just, create config alike
+all you need is: /etc/conf.d/repolist.conf
 
 ``` shell
 [Repos]
-user: 
-  /home/nen/contrib/portage -t git git
-  /home/nen/contrib/paludis -t hg git
+user:
+  /home/nen/contrib/portage
   /home/nen/contrib/uemacs
+  /home/nen/contrib/sync -t git hg
+  /home/nen/contrib/ctodo -t git hg
+  /home/nen/contrib/web/cynede -t git git
+  /home/nen -t git git
+  /home/nen/projects/ARMD/lib -t git git
 sudo:
-  /home/nen/contrib/buildroot -t git git
+  /home/steam-overlay
+  /home/nengraphy -t git git
+  /home/nen/contrib/buildroot
   /home/gentoo-haskell
   /home/gentoo-kde
-  /usr/src/kernel
 ```
 
-(git git is default)
+(git is default)
 
-and run sync. [not that it can't setup repos for you yet]
+and run forks-sync. [not that it can't setup repos for you yet]
 
 it will be look alike that:
 
