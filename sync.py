@@ -21,8 +21,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 import os
 import string
-import configparser 
-from subprocess import *
+import time
+from threading import Thread
+
+# -------- below classes has some troubles with my IDE but nvm ---------
+from configparser import ConfigParser 
+from subprocess import Popen, PIPE
+# ----------------------------------------------------------------------
 
 class VCS:
   git=0
@@ -31,6 +36,18 @@ class VCS:
   git_subversion=3
   git_veracity=4
   hg_hg=5
+  
+class ref:
+  def __init__(self, obj): self.obj = obj
+  def get(self):    return self.obj
+  def set(self, obj):      self.obj = obj
+  
+def waituntil(alive, timeout, period=0.25):
+  mustend = time.time() + timeout
+  while time.time() < mustend:
+    if alive.get(): time.sleep(period)
+    else: return True
+  return False
 
 def command(x):
   return str(Popen(x.split(' '), stdout=PIPE).communicate()[0])
@@ -88,47 +105,59 @@ def checkGitModifications():
   print("New:", gitNew())
   print("Modified:", gitModified())
 
-def sync(repo):
+class ThreadingSync(Thread):
+  def __init__(self, vcs):
+    Thread.__init__(self)
+    self.vcs = vcs
+  def run(self):
+    if self.vcs == VCS.git:
+      checkGitModifications()
+      gitSync()
+    elif self.vcs == VCS.git_git:
+      gitgitSync()
+    elif self.vcs == VCS.git_mercurial:
+      githgSync()
+    elif self.vcs == VCS.git_subversion:
+      print ( "can't sync git from subversion yet")
+    elif self.vcs == VCS.git_veracity:
+      print ( "can't sync git from veracity yet")
+      print ( "you can do it manually by using:")
+      print ( "vv fast-export proj proj.vci")
+      print ( "git fast-import < proj.vci")
+    elif self.vcs == VCS.hg_hg:
+      hghgSync()
+      
+def SyncStarter(repo):
+  print("------ Repository: ", repo, "------")
   r = repo.split("-t")
-  path = (r[0]).strip()
+  pth = (r[0]).strip()
   if len(r) < 2:
     vcs = VCS.git
   else:
     vcs = {
       'git' 		: VCS.git,
       'git git' 	: VCS.git_git,
-      'git hg' 		: VCS.git_mercurial,
+      'git hg' 	        : VCS.git_mercurial,
       'git svn' 	: VCS.git_subversion,
-      'git vv' 		: VCS.git_veracity,
-      'hg hg'       : VCS.hg_hg}[(r[1]).strip()]
-  os.chdir(path)
-  if vcs == VCS.git:
-    checkGitModifications()
-    gitSync()
-  elif vcs == VCS.git_git:
-    gitgitSync();
-  elif vcs == VCS.git_mercurial:
-    githgSync();
-  elif vcs == VCS.git_subversion:
-    print ( "can't sync git from subversion yet")
-  elif vcs == VCS.git_veracity:
-    print ( "can't sync git from veracity yet")
-    print ( "you can do it manually by using:")
-    print ( "vv fast-export proj proj.vci")
-    print ( "git fast-import < proj.vci")
-  elif vcs == VCS.hg_hg:
-    hghgSync();
+      'git vv' 	        : VCS.git_veracity,
+      'hg hg'       	: VCS.hg_hg}[(r[1]).strip()]
+  os.chdir(pth)
+  thrd = ThreadingSync(vcs)
+  thrd.setDaemon(True)
+  thrd.start()
+  if (waituntil(ref(thrd.is_alive()), 20) is False):
+    print(" --> ", r, ": timed out :(")
+  else:
+    print(" --> ", r, ": successful synchronized :)")
   print("________________________________________________________")
   
 def syncrepos(repos):
   for r in repos.split("\n"):
-    if r:
-      print("------ repository: ", r)
-      sync(r)
+    if r: SyncStarter(r)
 print("====================================================================")
-print("            sync: Global repositories synchronizer v.0.3  ")
+print("            sync: Global repositories synchronizer v.0.6  ")
 print("====================================================================")
-config = configparser.ConfigParser()
+config = ConfigParser()
 config.readfp(open('/etc/conf.d/repolist.conf'))
 if os.geteuid() == 0:
   print("warning: running from root, only root repositories is syncing")
