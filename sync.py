@@ -36,18 +36,6 @@ class VCS:
   git_subversion=3
   git_veracity=4
   hg_hg=5
-  
-class ref:
-  def __init__(self, obj): self.obj = obj
-  def get(self):    return self.obj
-  def set(self, obj):      self.obj = obj
-  
-def waituntil(alive, timeout, period=0.25):
-  mustend = time.time() + timeout
-  while time.time() < mustend:
-    if alive.get(): time.sleep(period)
-    else: return True
-  return False
 
 def command(x):
   return str(Popen(x.split(' '), stdout=PIPE).communicate()[0])
@@ -145,17 +133,23 @@ def SyncStarter(repo):
   thrd = ThreadingSync(vcs)
   thrd.setDaemon(True)
   thrd.start()
-  if (waituntil(ref(thrd.is_alive()), 20) is False):
-    print(" --> ", r, ": timed out :(")
-  else:
-    print(" --> ", r, ": successful synchronized :)")
+
+  succ = True
+  mustend = time.time() + 50
+  while time.time() < mustend:
+    if thrd.is_alive(): time.sleep(0.25)  
+    else: 
+      print(" --> ", r, ": successful synchronized :)")
+      succ = False
+      break
+  if succ: print(" --> ", r, ": timed out :(")
   print("________________________________________________________")
   
 def syncrepos(repos):
   for r in repos.split("\n"):
     if r: SyncStarter(r)
 print("====================================================================")
-print("            sync: Global repositories synchronizer v.0.6  ")
+print("            sync: Global repositories synchronizer v.0.7  ")
 print("====================================================================")
 config = ConfigParser()
 config.readfp(open('/etc/conf.d/repolist.conf'))
