@@ -2,7 +2,7 @@
 
 '''
 	      sync - Light sync util
-          Copyright (C)  2012  Ash Harley
+          Copyright (C)  2012  Heather Mason
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public
@@ -125,10 +125,10 @@ def SyncStarter(repo):
     vcs = {
       'git' 		: VCS.git,
       'git git' 	: VCS.git_git,
-      'git hg' 	        : VCS.git_mercurial,
+      'git hg' 	    : VCS.git_mercurial,
       'git svn' 	: VCS.git_subversion,
-      'git vv' 	        : VCS.git_veracity,
-      'hg hg'       	: VCS.hg_hg}[(r[1]).strip()]
+      'git vv' 	    : VCS.git_veracity,
+      'hg hg'       : VCS.hg_hg}[(r[1]).strip()]
   os.chdir(pth)
   thrd = ThreadingSync(vcs)
   thrd.setDaemon(True)
