@@ -143,13 +143,13 @@ def SyncStarter(repo):
       succ = False
       break
   if succ: print(" --> ", r, ": timed out :(")
-  print("________________________________________________________")
+  print("______________________________________________________________________")
   
 def syncrepos(repos):
   for r in repos.split("\n"):
     if r: SyncStarter(r)
 print("====================================================================")
-print("            sync: Global repositories synchronizer v.0.7  ")
+print("            sync: Global repositories synchronizer v.0.8  ")
 print("====================================================================")
 config = ConfigParser()
 config.readfp(open('/etc/conf.d/repolist.conf'))
