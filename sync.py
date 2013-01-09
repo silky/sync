@@ -2,7 +2,7 @@
 
 '''
 	      sync - Light sync util
-          Copyright (C)  2012  Heather Mason
+       Copyright (C)  2012  Heather
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public
@@ -135,7 +135,7 @@ def SyncStarter(repo):
   thrd.start()
 
   succ = True
-  mustend = time.time() + 50
+  mustend = time.time() + 100
   while time.time() < mustend:
     if thrd.is_alive(): time.sleep(0.25)  
     else: 
