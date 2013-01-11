@@ -51,11 +51,11 @@ def cmd(q):
   else:
     return command(q)
 
-def gitSync(): 
-  pretty(cmd("git pull origin master"))
-  pretty(cmd("git fetch upstream master"))
-  pretty(cmd("git pull --rebase upstream master"))
-  pretty(cmd("git push -f origin master"))
+def gitSync(branch): 
+  pretty(cmd("".join(["git pull origin ", branch])))
+  pretty(cmd("".join(["git fetch upstream ", branch])))
+  pretty(cmd("".join(["git pull --rebase upstream ", branch])))
+  pretty(cmd("".join(["git push -f origin ", branch])))
   
 def gitgitSync(): 
   pretty(cmd("git pull origin master"))
@@ -94,13 +94,14 @@ def checkGitModifications():
   print("Modified:", gitModified())
 
 class ThreadingSync(Thread):
-  def __init__(self, vcs):
+  def __init__(self, vcs, branch):
     Thread.__init__(self)
     self.vcs = vcs
+    self.branch = branch
   def run(self):
     if self.vcs == VCS.git:
       checkGitModifications()
-      gitSync()
+      gitSync(self.branch)
     elif self.vcs == VCS.git_git:
       gitgitSync()
     elif self.vcs == VCS.git_mercurial:
@@ -121,16 +122,22 @@ def SyncStarter(repo):
   pth = (r[0]).strip()
   if len(r) < 2:
     vcs = VCS.git
+    branch = 'master'
   else:
+    t = ((r[1]).strip()).split("-b")
+    if len(t) < 2:
+      branch = 'master'
+    else:
+      branch = (t[1]).strip()
     vcs = {
       'git' 		: VCS.git,
       'git git' 	: VCS.git_git,
       'git hg' 	    : VCS.git_mercurial,
       'git svn' 	: VCS.git_subversion,
       'git vv' 	    : VCS.git_veracity,
-      'hg hg'       : VCS.hg_hg}[(r[1]).strip()]
+      'hg hg'       : VCS.hg_hg}[(t[0]).strip()]
   os.chdir(pth)
-  thrd = ThreadingSync(vcs)
+  thrd = ThreadingSync(vcs,branch)
   thrd.setDaemon(True)
   thrd.start()
 
@@ -149,7 +156,7 @@ def syncrepos(repos):
   for r in repos.split("\n"):
     if r: SyncStarter(r)
 print("====================================================================")
-print("            sync: Global repositories synchronizer v.0.8  ")
+print("            sync: Global repositories synchronizer v.0.9  ")
 print("====================================================================")
 config = ConfigParser()
 config.readfp(open('/etc/conf.d/repolist.conf'))
