@@ -71,14 +71,6 @@ def hghgSync():
   pretty(cmd("hg pull"))
   pretty(cmd("hg update"))
   pretty(cmd("hg push hg"))
-  
-def gitUntracked():
-  status = command("git status")
-  if "# Untracked files:" in status:
-    untf = status.split("# Untracked files:")[1][1:].split("\n")
-    return rm_empty([x[2:] for x in untf if string.strip(x) != "#" and x.startswith("#\t")])
-  else:
-    return []
 
 def gitNew():
   status = command("git status").split("\n")
@@ -89,7 +81,6 @@ def gitModified():
   return [x[14:] for x in status if x.startswith("#\tmodified:   ")]
 
 def checkGitModifications():
-  print("Untracked:", gitUntracked())
   print("New:", gitNew())
   print("Modified:", gitModified())
 
