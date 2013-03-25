@@ -2,7 +2,7 @@
 
 '''
 	      sync - Light sync util
-       Copyright (C)  2012  Heather
+            Copyright (C)  2012  Heather
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public
@@ -30,132 +30,126 @@ from subprocess import Popen, PIPE
 # ----------------------------------------------------------------------
 
 class VCS:
-  git=0
-  git_git=1
-  git_mercurial=2
-  git_subversion=3
-  git_veracity=4
-  hg_hg=5
+    git=0
+    git_git=1
+    git_mercurial=2
+    git_subversion=3
+    hg_hg=5
 
 def command(x):
-  return str(Popen(x.split(' '), stdout=PIPE).communicate()[0])
+    return str(Popen(x.split(' '), stdout=PIPE).communicate()[0])
 def rm_empty(L): return [l for l in L if (l and l!="")]
 def pretty(msg):
-  ss = msg.split("\n")
-  for s in ss: 
-    if not s.startswith("b"): print(s)
+    ss = msg.split("\n")
+    for s in ss: 
+        if not s.startswith("b"): print(s)
 sudo = False
 def cmd(q):
-  if sudo:
-    return command("".join(["sudo ", q]))
-  else:
-    return command(q)
+    if sudo: return command("".join(["sudo ", q]))
+    else:    return command(q)
 
 def gitSync(branch): 
-  pretty(cmd("".join(["git pull origin ", branch])))
-  pretty(cmd("".join(["git fetch upstream ", branch])))
-  pretty(cmd("".join(["git pull --rebase upstream ", branch])))
-  pretty(cmd("".join(["git push -f origin ", branch])))
+    pretty(cmd("".join(["git pull origin ", branch])))
+    pretty(cmd("".join(["git fetch upstream ", branch])))
+    pretty(cmd("".join(["git pull --rebase upstream ", branch])))
+    pretty(cmd("".join(["git push -f origin ", branch])))
   
 def gitgitSync(): 
-  pretty(cmd("git pull origin master"))
-  pretty(cmd("git fetch git master"))
-  pretty(cmd("git push -f git master"))
+    pretty(cmd("git pull origin master"))
+    pretty(cmd("git fetch git master"))
+    pretty(cmd("git push -f git master"))
   
 def githgSync():
-  pretty(cmd("hg pull"))
-  pretty(cmd("hg update"))
-  pretty(cmd("hg push git"))
+    pretty(cmd("hg pull"))
+    pretty(cmd("hg update"))
+    pretty(cmd("hg push git"))
 
 def hghgSync():
-  pretty(cmd("hg pull"))
-  pretty(cmd("hg update"))
-  pretty(cmd("hg push hg"))
+    pretty(cmd("hg pull"))
+    pretty(cmd("hg update"))
+    pretty(cmd("hg push hg"))
 
 def gitNew():
-  status = command("git status").split("\n")
-  return [x[14:] for x in status if x.startswith("#\tnew file:   ")]
+    status = command("git status").split("\n")
+    return [x[14:] for x in status if x.startswith("#\tnew file:   ")]
 
 def gitModified():
-  status = command("git status").split("\n")
-  return [x[14:] for x in status if x.startswith("#\tmodified:   ")]
+    status = command("git status").split("\n")
+    return [x[14:] for x in status if x.startswith("#\tmodified:   ")]
 
 def checkGitModifications():
-  print("New:", gitNew())
-  print("Modified:", gitModified())
+    print("New:", gitNew())
+    print("Modified:", gitModified())
 
 class ThreadingSync(Thread):
-  def __init__(self, vcs, branch):
-    Thread.__init__(self)
-    self.vcs = vcs
-    self.branch = branch
-  def run(self):
-    if self.vcs == VCS.git:
-      checkGitModifications()
-      gitSync(self.branch)
-    elif self.vcs == VCS.git_git:
-      gitgitSync()
-    elif self.vcs == VCS.git_mercurial:
-      githgSync()
-    elif self.vcs == VCS.git_subversion:
-      print ( "can't sync git from subversion yet")
-    elif self.vcs == VCS.git_veracity:
-      print ( "can't sync git from veracity yet")
-      print ( "you can do it manually by using:")
-      print ( "vv fast-export proj proj.vci")
-      print ( "git fast-import < proj.vci")
-    elif self.vcs == VCS.hg_hg:
-      hghgSync()
+    def __init__(self, vcs, branch):
+        Thread.__init__(self)
+        self.vcs = vcs
+        self.branch = branch
+    def run(self):
+        if self.vcs == VCS.git:
+            checkGitModifications()
+            gitSync(self.branch)
+        elif self.vcs == VCS.git_git:
+            gitgitSync()
+        elif self.vcs == VCS.git_mercurial:
+            githgSync()
+        elif self.vcs == VCS.git_subversion:
+            print ( "can't sync git from subversion yet")
+        elif self.vcs == VCS.hg_hg:
+            hghgSync()
       
 def SyncStarter(repo):
-  print("------ Repository: ", repo, "------")
-  r = repo.split("-t")
-  pth = (r[0]).strip()
-  if len(r) < 2:
-    vcs = VCS.git
-    branch = 'master'
-  else:
-    t = ((r[1]).strip()).split("-b")
-    if len(t) < 2:
-      branch = 'master'
+    print("------ Repository: ", repo, "------")
+    r = repo.split("-t")
+    pth = (r[0]).strip()
+    if len(r) < 2:
+        vcs = VCS.git
+        branch = 'master'
     else:
-      branch = (t[1]).strip()
-    vcs = {
-      'git' 		: VCS.git,
-      'git git' 	: VCS.git_git,
-      'git hg' 	    : VCS.git_mercurial,
-      'git svn' 	: VCS.git_subversion,
-      'git vv' 	    : VCS.git_veracity,
-      'hg hg'       : VCS.hg_hg}[(t[0]).strip()]
-  os.chdir(pth)
-  thrd = ThreadingSync(vcs,branch)
-  thrd.setDaemon(True)
-  thrd.start()
+        t = ((r[1]).strip()).split("-b")
+        if len(t) < 2:
+            branch = 'master'
+        else:
+            branch = (t[1]).strip()
+        vcs = {
+            'git' 	    : VCS.git,
+            'git git'     : VCS.git_git,
+            'git hg' 	    : VCS.git_mercurial,
+            'git svn'     : VCS.git_subversion,
+            'hg hg'       : VCS.hg_hg}[(t[0]).strip()]
+    os.chdir(pth)
+    thrd = ThreadingSync(vcs,branch)
+    thrd.setDaemon(True)
+    thrd.start()
 
-  succ = True
-  mustend = time.time() + 100
-  while time.time() < mustend:
-    if thrd.is_alive(): time.sleep(0.25)  
-    else: 
-      print(" --> ", r, ": successful synchronized :)")
-      succ = False
-      break
-  if succ: print(" --> ", r, ": timed out :(")
-  print("______________________________________________________________________")
+    succ = True
+    mustend = time.time() + 120
+    while time.time() < mustend:
+        if thrd.is_alive(): time.sleep(0.25)  
+        else: 
+            print(" --> ", r, ": successful synchronized :)")
+            succ = False
+            break
+    if succ: print(" --> ", r, ": timed out :(")
+    print("______________________________________________________________________")
   
-def syncrepos(repos):
-  for r in repos.split("\n"):
-    if r: SyncStarter(r)
+def syncrepos(repos): 
+    for r in repos.split("\n"): 
+        if r: SyncStarter(r)
+
 print("====================================================================")
-print("            sync: Global repositories synchronizer v.0.9  ")
+print("            sync: Global repositories synchronizer v.1.0  ")
 print("====================================================================")
+
 config = ConfigParser()
 config.readfp(open('/etc/conf.d/repolist.conf'))
+
 if os.geteuid() == 0:
-  print("warning: running from root, only root repositories is syncing")
+    print("warning: running from root, only root repositories is syncing")
 else:
-  user = config.get('Repos','user')
-  syncrepos(user)
-  sudo = True
+    user = config.get('Repos','user')
+    syncrepos(user)
+    sudo = True
 root = config.get('Repos','sudo')
 syncrepos(root)
