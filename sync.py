@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 '''
-	      sync - Light sync util
+              sync - Light sync util
             Copyright (C)  2012  Heather
 
 This library is free software; you can redistribute it and/or
@@ -53,12 +53,17 @@ def gitSync(branch):
     pretty(cmd("".join(["git fetch upstream ", branch])))
     pretty(cmd("".join(["git pull --rebase upstream ", branch])))
     pretty(cmd("".join(["git push -f origin ", branch])))
-  
+
+def gitPU(branch): 
+    pretty(cmd("".join(["git pull origin ", branch])))
+    pretty(cmd("".join(["git commit -am \"submodule update\"", branch])))
+    pretty(cmd("".join(["git push -f origin ", branch])))
+
 def gitgitSync(): 
     pretty(cmd("git pull origin master"))
     pretty(cmd("git fetch git master"))
     pretty(cmd("git push -f git master"))
-  
+
 def githgSync():
     pretty(cmd("hg pull"))
     pretty(cmd("hg update"))
@@ -81,6 +86,17 @@ def checkGitModifications():
     print("New:", gitNew())
     print("Modified:", gitModified())
 
+class ParentUpdate(Thread):
+    def __init__(self, vcs, branch):
+        Thread.__init__(self)
+        self.vcs = vcs
+        self.branch = branch
+        self.parent = parent
+    def run(self):
+        if self.vcs == VCS.git:
+            checkGitModifications()
+            gitPU(self.branch)
+
 class ThreadingSync(Thread):
     def __init__(self, vcs, branch):
         Thread.__init__(self)
@@ -98,9 +114,10 @@ class ThreadingSync(Thread):
             print ( "can't sync git from subversion yet")
         elif self.vcs == VCS.hg_hg:
             hghgSync()
-      
+
 def SyncStarter(repo):
     print("------ Repository: ", repo, "------")
+    haveparent = False
     r = repo.split("-t")
     pth = (r[0]).strip()
     if len(r) < 2:
@@ -112,12 +129,18 @@ def SyncStarter(repo):
             branch = 'master'
         else:
             branch = (t[1]).strip()
+        sbm = ((t[1]).strip()).split("-p")
+        if len(sbm) < 2:
+            haveparent = False
+        else:
+            haveparent = True
+            parent = (sbm[1]).strip()
         vcs = {
-            'git' 	    : VCS.git,
-            'git git'     : VCS.git_git,
-            'git hg' 	    : VCS.git_mercurial,
-            'git svn'     : VCS.git_subversion,
-            'hg hg'       : VCS.hg_hg}[(t[0]).strip()]
+            'git'       : VCS.git,
+            'git git'   : VCS.git_git,
+            'git hg' 	: VCS.git_mercurial,
+            'git svn'   : VCS.git_subversion,
+            'hg hg'     : VCS.hg_hg}[(t[0]).strip()]
     os.chdir(pth)
     thrd = ThreadingSync(vcs,branch)
     thrd.setDaemon(True)
@@ -129,17 +152,32 @@ def SyncStarter(repo):
         if thrd.is_alive(): time.sleep(0.25)  
         else: 
             print(" --> ", r, ": successful synchronized :)")
+            if haveparent:
+                print("------ Parent update: ", parent, "------")
+                os.chdir( parent.strip() )
+                thrdp = ParentUpdate(vcs,branch,parent)
+                thrdp.setDaemon(True)
+                thrdp.start()
+                succp = True
+                mustendp = time.time() + 120
+                while time.time() < mustendp:
+                    if thrdp.is_alive(): time.sleep(0.25)  
+                    else: 
+                        print(" --> ", parent, ": successful synchronized :)")
+                        succp = False
+                        break
+                if succp: print(" --> ", parent, ": timed out :(")
             succ = False
             break
     if succ: print(" --> ", r, ": timed out :(")
     print("______________________________________________________________________")
-  
+
 def syncrepos(repos): 
     for r in repos.split("\n"): 
         if r: SyncStarter(r)
 
 print("====================================================================")
-print("            sync: Global repositories synchronizer v.1.0  ")
+print("            sync: Global repositories synchronizer v.1.1  ")
 print("====================================================================")
 
 config = ConfigParser()
