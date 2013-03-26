@@ -49,7 +49,7 @@ def cmd(q):
     else:    return command(q)
 
 def gitSync(branch): 
-    pretty(cmd("".join(["git rebase --abort ", branch])))
+    pretty(cmd("git rebase --abort "))
     pretty(cmd("".join(["git pull origin ", branch])))
     pretty(cmd("".join(["git fetch upstream ", branch])))
     pretty(cmd("".join(["git pull --rebase upstream ", branch])))
@@ -57,7 +57,7 @@ def gitSync(branch):
 
 def gitPU(branch): 
     pretty(cmd("".join(["git pull origin ", branch])))
-    pretty(cmd("".join(["git commit -a"])))
+    pretty(cmd("git commit -a"))
     pretty(cmd("".join(["git push -f origin ", branch])))
 
 def gitgitSync(): 
