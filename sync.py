@@ -56,7 +56,7 @@ def gitSync(branch):
 
 def gitPU(branch): 
     pretty(cmd("".join(["git pull origin ", branch])))
-    pretty(cmd("".join(["git commit -am \"submodule update\"", branch])))
+    pretty(cmd("".join(["git commit -a"])))
     pretty(cmd("".join(["git push -f origin ", branch])))
 
 def gitgitSync(): 
@@ -91,7 +91,6 @@ class ParentUpdate(Thread):
         Thread.__init__(self)
         self.vcs = vcs
         self.branch = branch
-        self.parent = parent
     def run(self):
         if self.vcs == VCS.git:
             checkGitModifications()
@@ -116,31 +115,33 @@ class ThreadingSync(Thread):
             hghgSync()
 
 def SyncStarter(repo):
-    print("------ Repository: ", repo, "------")
+    vcs = VCS.git
     haveparent = False
+    branch = 'master'
+    parent = ''
+
     r = repo.split("-t")
-    pth = (r[0]).strip()
-    if len(r) < 2:
-        vcs = VCS.git
-        branch = 'master'
-    else:
-        t = ((r[1]).strip()).split("-b")
-        if len(t) < 2:
-            branch = 'master'
-        else:
-            branch = (t[1]).strip()
-        sbm = ((t[1]).strip()).split("-p")
-        if len(sbm) < 2:
-            haveparent = False
-        else:
-            haveparent = True
-            parent = (sbm[1]).strip()
-        vcs = {
+    pth  = ((r[0]).split(" "))[0]
+
+    print("------ Repository: ", pth, "------")
+
+    if len(r) > 1:
+        svcs = ((r[1]).split(" "))[1]
+        vcs = { 
             'git'       : VCS.git,
             'git git'   : VCS.git_git,
             'git hg' 	: VCS.git_mercurial,
             'git svn'   : VCS.git_subversion,
-            'hg hg'     : VCS.hg_hg}[(t[0]).strip()]
+            'hg hg'     : VCS.hg_hg}[svcs]
+
+    t = repo.split("-b")   # <----- Branch
+    if len(t) > 1:
+        branch = ((t[1]).split(" ")[1])
+    sbm = repo.split("-p") # <----- Submodule Parents
+    if len(sbm) > 1:
+        haveparent = True
+        parent = ((sbm[1]).split(" ")[1])
+
     os.chdir(pth)
     thrd = ThreadingSync(vcs,branch)
     thrd.setDaemon(True)
@@ -151,11 +152,11 @@ def SyncStarter(repo):
     while time.time() < mustend:
         if thrd.is_alive(): time.sleep(0.25)  
         else: 
-            print(" --> ", r, ": successful synchronized :)")
+            print(" --> ", pth, ": successful synchronized :)")
             if haveparent:
                 print("------ Parent update: ", parent, "------")
                 os.chdir( parent.strip() )
-                thrdp = ParentUpdate(vcs,branch,parent)
+                thrdp = ParentUpdate(vcs,branch)
                 thrdp.setDaemon(True)
                 thrdp.start()
                 succp = True
@@ -177,7 +178,7 @@ def syncrepos(repos):
         if r: SyncStarter(r)
 
 print("====================================================================")
-print("            sync: Global repositories synchronizer v.1.1  ")
+print("            sync: Global repositories synchronizer v.1.2  ")
 print("====================================================================")
 
 config = ConfigParser()
