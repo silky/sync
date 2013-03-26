@@ -49,6 +49,7 @@ def cmd(q):
     else:    return command(q)
 
 def gitSync(branch): 
+    pretty(cmd("".join(["git rebase --abort ", branch])))
     pretty(cmd("".join(["git pull origin ", branch])))
     pretty(cmd("".join(["git fetch upstream ", branch])))
     pretty(cmd("".join(["git pull --rebase upstream ", branch])))
@@ -178,7 +179,7 @@ def syncrepos(repos):
         if r: SyncStarter(r)
 
 print("====================================================================")
-print("            sync: Global repositories synchronizer v.1.2  ")
+print("            sync: Global repositories synchronizer v.1.3  ")
 print("====================================================================")
 
 config = ConfigParser()
