@@ -49,7 +49,7 @@ def cmd(q):
     else:    return command(q)
 
 def gitSync(branch): 
-    pretty(cmd("git rebase --abort "))
+    pretty(cmd("git rebase --abort"))
     pretty(cmd("".join(["git pull origin ", branch])))
     pretty(cmd("".join(["git fetch upstream ", branch])))
     pretty(cmd("".join(["git pull --rebase upstream ", branch])))
@@ -155,7 +155,7 @@ def SyncStarter(repo):
         else: 
             print(" --> ", pth, ": successful synchronized :)")
             if haveparent:
-                print("------ Parent update: ", parent, "------")
+                print(">>>>>>>>> Parent update: ", parent)
                 os.chdir( parent.strip() )
                 thrdp = ParentUpdate(vcs,branch)
                 thrdp.setDaemon(True)
@@ -178,9 +178,9 @@ def syncrepos(repos):
     for r in repos.split("\n"): 
         if r: SyncStarter(r)
 
-print("====================================================================")
-print("            sync: Global repositories synchronizer v.1.3  ")
-print("====================================================================")
+print("=====================================================================================")
+print("                     sync: Global repositories synchronizer v.1.4  ")
+print("=====================================================================================")
 
 config = ConfigParser()
 config.readfp(open('/etc/conf.d/repolist.conf'))
