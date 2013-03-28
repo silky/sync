@@ -57,7 +57,7 @@ def gitSync(branch):
 
 def gitPU(branch): 
     pretty(cmd("".join(["git pull origin ", branch])))
-    pretty(cmd("git commit -a"))
+    pretty(cmd("git commit -am submodule"))
     pretty(cmd("".join(["git push -f origin ", branch])))
 
 def gitgitSync(): 
@@ -131,7 +131,7 @@ def SyncStarter(repo):
         vcs = { 
             'git'       : VCS.git,
             'git git'   : VCS.git_git,
-            'git hg' 	: VCS.git_mercurial,
+            'git hg'    : VCS.git_mercurial,
             'git svn'   : VCS.git_subversion,
             'hg hg'     : VCS.hg_hg}[svcs]
 
@@ -179,7 +179,7 @@ def syncrepos(repos):
         if r: SyncStarter(r)
 
 print("=====================================================================================")
-print("                     sync: Global repositories synchronizer v.1.4  ")
+print("                     sync: Global repositories synchronizer v.1.5  ")
 print("=====================================================================================")
 
 config = ConfigParser()
