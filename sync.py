@@ -2,7 +2,7 @@
 
 '''
               sync - Light sync util
-            Copyright (C)  2012  Heather
+          Copyright (C)  2012-2013  Heather
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public
