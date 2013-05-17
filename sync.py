@@ -36,6 +36,8 @@ class VCS:
     git_subversion=3
     hg_hg=5
 
+sudo = False
+
 def command(x):
     return str(Popen(x.split(' '), stdout=PIPE).communicate()[0])
 def rm_empty(L): return [l for l in L if (l and l!="")]
@@ -43,37 +45,37 @@ def pretty(msg):
     ss = msg.split("\n")
     for s in ss: 
         if not s.startswith("b"): print(s)
-sudo = False
 def cmd(q):
     if sudo: return command("".join(["sudo ", q]))
     else:    return command(q)
+def sh(s): pretty(cmd(s))
 
 def gitSync(branch): 
-    pretty(cmd("git rebase --abort"))
-    pretty(cmd("".join(["git pull origin ", branch])))
-    pretty(cmd("".join(["git fetch upstream ", branch])))
-    pretty(cmd("".join(["git pull --rebase upstream ", branch])))
-    pretty(cmd("".join(["git push -f origin ", branch])))
+    sh("git rebase --abort")
+    sh("".join(["git pull origin ", branch]))
+    sh("".join(["git fetch upstream ", branch]))
+    sh("".join(["git pull --rebase upstream ", branch]))
+    sh("".join(["git push -f origin ", branch]))
 
 def gitPU(branch): 
-    pretty(cmd("".join(["git pull origin ", branch])))
-    pretty(cmd("git commit -am submodule"))
-    pretty(cmd("".join(["git push -f origin ", branch])))
+    sh("".join(["git pull origin ", branch]))
+    sh("git commit -am submodule")
+    sh("".join(["git push -f origin ", branch]))
 
 def gitgitSync(): 
-    pretty(cmd("git pull origin master"))
-    pretty(cmd("git fetch git master"))
-    pretty(cmd("git push -f git master"))
+    sh("git pull origin master")
+    sh("git fetch git master")
+    sh("git push -f git master")
 
 def githgSync():
-    pretty(cmd("hg pull"))
-    pretty(cmd("hg update"))
-    pretty(cmd("hg push git"))
+    sh("hg pull")
+    sh("hg update")
+    sh("hg push git")
 
 def hghgSync():
-    pretty(cmd("hg pull"))
-    pretty(cmd("hg update"))
-    pretty(cmd("hg push hg"))
+    sh("hg pull")
+    sh("hg update")
+    sh("hg push hg")
 
 def gitNew():
     status = command("git status").split("\n")
@@ -179,7 +181,7 @@ def syncrepos(repos):
         if r: SyncStarter(r)
 
 print("=====================================================================================")
-print("                     sync: Global repositories synchronizer v.1.5  ")
+print("                     sync: Global repositories synchronizer v.1.6  ")
 print("=====================================================================================")
 
 config = ConfigParser()
