@@ -80,5 +80,3 @@ in gentoo you can install it from my overlay
 emerge sync
 ```
 
-P.S.: I think that I defenitely hate python
--------------------------------------------
