@@ -123,7 +123,7 @@ def SyncStarter(repo):
     branch = 'master'
     parent = ''
 
-    r = repo.split("-t")
+    r = repo.split(" -t")
     pth  = ((r[0]).split(" "))[0]
 
     print("------ Repository: ", pth, "------")
@@ -137,10 +137,10 @@ def SyncStarter(repo):
             'git svn'   : VCS.git_subversion,
             'hg hg'     : VCS.hg_hg}[svcs]
 
-    t = repo.split("-b")   # <----- Branch
+    t = repo.split(" -b")   # <----- Branch
     if len(t) > 1:
         branch = ((t[1]).split(" ")[1])
-    sbm = repo.split("-p") # <----- Submodule Parents
+    sbm = repo.split(" -p") # <----- Submodule Parents
     if len(sbm) > 1:
         haveparent = True
         parent = ((sbm[1]).split(" ")[1])
@@ -181,7 +181,7 @@ def syncrepos(repos):
         if r: SyncStarter(r)
 
 print("=====================================================================================")
-print("                     sync: Global repositories synchronizer v.1.6  ")
+print("                     sync: Global repositories synchronizer v.1.7  ")
 print("=====================================================================================")
 
 config = ConfigParser()
