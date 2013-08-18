@@ -24,7 +24,6 @@ import string
 import time
 from threading import Thread
 
-# -------- below classes has some troubles with my IDE but nvm ---------
 from configparser import ConfigParser 
 from subprocess import Popen, PIPE
 # ----------------------------------------------------------------------
@@ -181,10 +180,10 @@ def syncrepos(repos):
         if r: SyncStarter(r)
 
 def sync(oz): 
-    if oz == 'nt': 
+    if oz == 'nt':
         config.readfp(open('../repolist.conf'))
         syncrepos( config.get('Repos','user') )
-    else: 
+    else:
         config.readfp(open('/etc/conf.d/repolist.conf'))
         if os.geteuid() == 0:
             print("warning: running from root, only root repositories is syncing")
