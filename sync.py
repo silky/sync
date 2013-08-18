@@ -180,18 +180,24 @@ def syncrepos(repos):
     for r in repos.split("\n"): 
         if r: SyncStarter(r)
 
+def sync(oz): 
+    if oz == 'nt': 
+        config.readfp(open('../repolist.conf'))
+        syncrepos( config.get('Repos','user') )
+    else: 
+        config.readfp(open('/etc/conf.d/repolist.conf'))
+        if os.geteuid() == 0:
+            print("warning: running from root, only root repositories is syncing")
+        else:
+            user = config.get('Repos','user')
+            syncrepos(user)
+            sudo = True
+        root = config.get('Repos','sudo')
+        syncrepos(root)
+
 print("=====================================================================================")
-print("                     sync: Global repositories synchronizer v.1.7  ")
+print("                     sync: Global repositories synchronizer v.1.8  ")
 print("=====================================================================================")
 
 config = ConfigParser()
-config.readfp(open('/etc/conf.d/repolist.conf'))
-
-if os.geteuid() == 0:
-    print("warning: running from root, only root repositories is syncing")
-else:
-    user = config.get('Repos','user')
-    syncrepos(user)
-    sudo = True
-root = config.get('Repos','sudo')
-syncrepos(root)
+sync(os.name)

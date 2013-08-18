@@ -1,6 +1,8 @@
 Sync is util which will help you to keep your forks up to date!
 
-all you need is: /etc/conf.d/repolist.conf
+all you need is: /etc/conf.d/repolist.conf or ../repolist.conf on windows
+
+( works on windows since 1.8 version )
 
 ``` shell
 [Repos]
@@ -16,6 +18,27 @@ sudo:
 (git and master branch are defaults)
 
 and run forks-sync. [not that it can't setup repos for you yet]
+
+``` python
+def syncrepos(repos): 
+    for r in repos.split("\n"): 
+        if r: SyncStarter(r)
+
+def sync(oz): 
+    if oz == 'nt': 
+        config.readfp(open('../repolist.conf'))
+        syncrepos( config.get('Repos','user') )
+    else: 
+        config.readfp(open('/etc/conf.d/repolist.conf'))
+        if os.geteuid() == 0:
+            print("warning: running from root, only root repositories is syncing")
+        else:
+            user = config.get('Repos','user')
+            syncrepos(user)
+            sudo = True
+        root = config.get('Repos','sudo')
+        syncrepos(root)
+```
 
 it will be look alike that:
 
