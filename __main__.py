@@ -40,6 +40,7 @@ class VCS:
     hg_hg=5
 
 sudo = False
+fst = True
 
 def command(x):
     return str(Popen(x.split(' '), stdout=PIPE).communicate()[0])
@@ -153,7 +154,6 @@ def DoUpdate(vcs, branch, useub, haveparent, upstreambranch, parent):
             break
     if succ: print(" --> ", r, ": timed out :(")
 
-fst = True
 def SyncStarter(repo):
     global fst
     
