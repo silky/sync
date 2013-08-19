@@ -152,8 +152,11 @@ def DoUpdate(vcs, branch, useub, haveparent, upstreambranch, parent):
             succ = False
             break
     if succ: print(" --> ", r, ": timed out :(")
-    
+
+fst = True
 def SyncStarter(repo):
+    global fst
+    
     vcs = VCS.git
     useub = False
     haveparent = False
@@ -188,7 +191,14 @@ def SyncStarter(repo):
     if len(sbm) > 1:
         haveparent = True
         parent = ((sbm[1]).split(" ")[1])
-    os.chdir(pth)
+        
+    if fst: 
+        fst = False
+        os.chdir(pth)
+    else:
+        os.chdir("..")
+        os.chdir(pth)
+        
     if len(branches) > 1:
         for b in branches:
             print("--> branch: ", b)
@@ -216,7 +226,7 @@ def sync(oz):
         syncrepos(root)
 
 print("=====================================================================================")
-print("                     sync: Global repositories synchronizer v.2.0  ")
+print("                     sync: Global repositories synchronizer v.2.1  ")
 print("=====================================================================================")
 
 config = ConfigParser()
