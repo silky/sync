@@ -185,7 +185,7 @@ def syncrepos(repos):
 
 def sync(oz): 
     if oz == 'nt':
-        config.readfp(open('../repolist.conf'))
+        config.readfp(open('repolist.conf'))
         syncrepos( config.get('Repos','user') )
     else:
         config.readfp(open('/etc/conf.d/repolist.conf'))
@@ -199,7 +199,7 @@ def sync(oz):
         syncrepos(root)
 
 print("=====================================================================================")
-print("                     sync: Global repositories synchronizer v.1.8  ")
+print("                     sync: Global repositories synchronizer v.1.9  ")
 print("=====================================================================================")
 
 config = ConfigParser()
