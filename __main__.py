@@ -53,19 +53,20 @@ def cmd(q):
     else:    return command(q)
 def sh(s): pretty(cmd(s))
 
-def gitSync(branch): 
+def gitSync(branch, upstreambranch):
+    sh("".join(["git checkout ", branch]))
     sh("git rebase --abort")
     sh("".join(["git pull origin ", branch]))
-    sh("".join(["git fetch upstream ", branch]))
-    sh("".join(["git pull --rebase upstream ", branch]))
+    sh("".join(["git fetch upstream ", upstreambranch]))
+    sh("".join(["git pull --rebase upstream ", upstreambranch]))
     sh("".join(["git push -f origin ", branch]))
 
-def gitPU(branch): 
+def gitPU(branch):
     sh("".join(["git pull origin ", branch]))
     sh("git commit -am submodule")
     sh("".join(["git push -f origin ", branch]))
 
-def gitgitSync(): 
+def gitgitSync():
     sh("git pull origin master")
     sh("git fetch git master")
     sh("git push -f git master")
@@ -103,14 +104,15 @@ class ParentUpdate(Thread):
             gitPU(self.branch)
 
 class ThreadingSync(Thread):
-    def __init__(self, vcs, branch):
+    def __init__(self, vcs, branch, upstreambranch):
         Thread.__init__(self)
         self.vcs = vcs
         self.branch = branch
+        self.upstreambranch = upstreambranch
     def run(self):
         if self.vcs == VCS.git:
             checkGitModifications()
-            gitSync(self.branch)
+            gitSync(self.branch, self.upstreambranch)
         elif self.vcs == VCS.git_git:
             gitgitSync()
         elif self.vcs == VCS.git_mercurial:
@@ -120,11 +122,45 @@ class ThreadingSync(Thread):
         elif self.vcs == VCS.hg_hg:
             hghgSync()
 
+def DoUpdate(vcs, branch, useub, haveparent, upstreambranch, parent):
+    if not useub: upstreambranch = branch
+    thrd = ThreadingSync(vcs,branch, upstreambranch)
+    thrd.setDaemon(True)
+    thrd.start()
+    
+    succ = True
+    mustend = time.time() + 120
+    while time.time() < mustend:
+        if thrd.is_alive(): time.sleep(0.25)  
+        else: 
+            print(" --> successful synchronized :)")
+            if haveparent:
+                print(">>>>>>>>> Parent update: ", parent)
+                os.chdir( parent.strip() )
+                thrdp = ParentUpdate(vcs, branch)
+                thrdp.setDaemon(True)
+                thrdp.start()
+                succp = True
+                mustendp = time.time() + 120
+                while time.time() < mustendp:
+                    if thrdp.is_alive(): time.sleep(0.25)  
+                    else: 
+                        print(" --> ", parent, ": successful synchronized :)")
+                        succp = False
+                        break
+                if succp: print(" --> ", parent, ": timed out :(")
+            succ = False
+            break
+    if succ: print(" --> ", r, ": timed out :(")
+    
 def SyncStarter(repo):
     vcs = VCS.git
+    useub = False
     haveparent = False
+    branches = ''
     branch = 'master'
     parent = ''
+    upstreambranch = ''
 
     r = repo.split(" -t")
     pth  = ((r[0]).split(" "))[0]
@@ -143,40 +179,21 @@ def SyncStarter(repo):
     t = repo.split(" -b")   # <----- Branch
     if len(t) > 1:
         branch = ((t[1]).split(" ")[1])
+        branches = branch.split(",")
+    pb = repo.split(" -u") # <----- Upstream Branch
+    if len(pb) > 1:
+        useub = True
+        upstreambranch = ((pb[1]).split(" ")[1])
     sbm = repo.split(" -p") # <----- Submodule Parents
     if len(sbm) > 1:
         haveparent = True
         parent = ((sbm[1]).split(" ")[1])
-
     os.chdir(pth)
-    thrd = ThreadingSync(vcs,branch)
-    thrd.setDaemon(True)
-    thrd.start()
-
-    succ = True
-    mustend = time.time() + 120
-    while time.time() < mustend:
-        if thrd.is_alive(): time.sleep(0.25)  
-        else: 
-            print(" --> ", pth, ": successful synchronized :)")
-            if haveparent:
-                print(">>>>>>>>> Parent update: ", parent)
-                os.chdir( parent.strip() )
-                thrdp = ParentUpdate(vcs,branch)
-                thrdp.setDaemon(True)
-                thrdp.start()
-                succp = True
-                mustendp = time.time() + 120
-                while time.time() < mustendp:
-                    if thrdp.is_alive(): time.sleep(0.25)  
-                    else: 
-                        print(" --> ", parent, ": successful synchronized :)")
-                        succp = False
-                        break
-                if succp: print(" --> ", parent, ": timed out :(")
-            succ = False
-            break
-    if succ: print(" --> ", r, ": timed out :(")
+    if len(branches) > 1:
+        for b in branches:
+            print("--> branch: ", b)
+            DoUpdate(vcs, b, useub, haveparent, upstreambranch, parent)
+    else: DoUpdate(vcs, branch, useub, haveparent, upstreambranch, parent)
     print("______________________________________________________________________")
 
 def syncrepos(repos): 
@@ -199,7 +216,7 @@ def sync(oz):
         syncrepos(root)
 
 print("=====================================================================================")
-print("                     sync: Global repositories synchronizer v.1.9  ")
+print("                     sync: Global repositories synchronizer v.2.0  ")
 print("=====================================================================================")
 
 config = ConfigParser()
