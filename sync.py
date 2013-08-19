@@ -24,7 +24,11 @@ import string
 import time
 from threading import Thread
 
-from configparser import ConfigParser 
+#Python 2x / 3x compatibility
+try:  from configparser import ConfigParser 
+except ImportError: 
+    from ConfigParser import ConfigParser 
+
 from subprocess import Popen, PIPE
 # ----------------------------------------------------------------------
 
