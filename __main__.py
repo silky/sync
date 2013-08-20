@@ -211,6 +211,7 @@ def syncrepos(repos):
         if r: SyncStarter(r)
 
 def sync(oz): 
+    global sudo
     if oz == 'nt':
         config.readfp(open('repolist.conf'))
         syncrepos( config.get('Repos','user') )
@@ -226,7 +227,7 @@ def sync(oz):
         syncrepos(root)
 
 print("=====================================================================================")
-print("                     sync: Global repositories synchronizer v.2.1  ")
+print("                     sync: Global repositories synchronizer v.2.2  ")
 print("=====================================================================================")
 
 config = ConfigParser()
