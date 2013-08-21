@@ -90,8 +90,8 @@ def gitModified():
     return [x[14:] for x in status if x.startswith("#\tmodified:   ")]
 
 def checkGitModifications():
-    print("New:", gitNew())
-    print("Modified:", gitModified())
+    print("New: %s" % gitNew())
+    print("Modified: %s" % gitModified())
 
 class ParentUpdate(Thread):
     def __init__(self, vcs, branch):
@@ -118,7 +118,7 @@ class ThreadingSync(Thread):
         elif self.vcs == VCS.git_mercurial:
             githgSync()
         elif self.vcs == VCS.git_subversion:
-            print ( "can't sync git from subversion yet")
+            print ("can't sync git from subversion yet")
         elif self.vcs == VCS.hg_hg:
             hghgSync()
 
@@ -135,7 +135,7 @@ def DoUpdate(vcs, branch, useub, haveparent, upstreambranch, parent):
         else: 
             print(" --> successful synchronized :)")
             if haveparent:
-                print(">>>>>>>>> Parent update: ", parent)
+                print(">>>>>>>>> Parent update: %s" % parent)
                 os.chdir( parent.strip() )
                 thrdp = ParentUpdate(vcs, branch)
                 thrdp.setDaemon(True)
@@ -145,13 +145,13 @@ def DoUpdate(vcs, branch, useub, haveparent, upstreambranch, parent):
                 while time.time() < mustendp:
                     if thrdp.is_alive(): time.sleep(0.25)  
                     else: 
-                        print(" --> ", parent, ": successful synchronized :)")
+                        print(" --> %s : successful synchronized :)" % parent)
                         succp = False
                         break
-                if succp: print(" --> ", parent, ": timed out :(")
+                if succp: print(" --> %s : timed out :(" % parent)
             succ = False
             break
-    if succ: print(" --> ", r, ": timed out :(")
+    if succ: print(" --> %s : timed out :(" % r)
 
 def SyncStarter(repo):
     global fst
@@ -167,7 +167,7 @@ def SyncStarter(repo):
     r = repo.split(" -t")
     pth  = ((r[0]).split(" "))[0]
 
-    print("------ Repository: ", pth, "------")
+    print("------ Repository: %s ------" % pth)
 
     if len(r) > 1:
         svcs = ((r[1]).split(" "))[1]
@@ -200,7 +200,7 @@ def SyncStarter(repo):
         
     if len(branches) > 1:
         for b in branches:
-            print("--> branch: ", b)
+            print("--> branch: %s" % b)
             DoUpdate(vcs, b, useub, haveparent, upstreambranch, parent)
     else: DoUpdate(vcs, branch, useub, haveparent, upstreambranch, parent)
     print("______________________________________________________________________")
@@ -226,7 +226,7 @@ def sync(oz):
         syncrepos(root)
 
 print("=====================================================================================")
-print("                     sync: Global repositories synchronizer v.2.2  ")
+print("                     sync: Global repositories synchronizer v.2.3  ")
 print("=====================================================================================")
 
 config = ConfigParser()
