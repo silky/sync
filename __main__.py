@@ -44,7 +44,6 @@ fst = True
 
 def command(x):
     return str(Popen(x.split(' '), stdout=PIPE).communicate()[0])
-def rm_empty(L): return [l for l in L if (l and l!="")]
 def pretty(msg):
     ss = msg.split("\n")
     for s in ss: 
