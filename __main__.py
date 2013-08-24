@@ -43,7 +43,7 @@ sudo = False
 fst = True
 
 def command(x):
-    return str(Popen(x.split(' '), stdout=PIPE).communicate()[0])
+    return str(Popen(x.split(' '), stdout=PIPE, shell = True).communicate()[0])
 def pretty(msg):
     ss = msg.split("\n")
     for s in ss: 
@@ -226,7 +226,7 @@ def sync(oz):
         syncrepos(root)
 
 print("=====================================================================================")
-print("                     sync: Global repositories synchronizer v.2.3  ")
+print("                     sync: Global repositories synchronizer v.2.4  ")
 print("=====================================================================================")
 
 config = ConfigParser()
