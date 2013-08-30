@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 '''
               sync - Light sync util
@@ -231,3 +231,4 @@ print("=========================================================================
 
 config = ConfigParser()
 sync(os.name)
+
