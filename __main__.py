@@ -42,6 +42,11 @@ class VCS:
 sudo = False
 fst = True
 
+#statistics
+total = 0
+success = 0
+error = 0
+
 def command(x, shll):
     return str(Popen(x.split(' '), stdout=PIPE, shell = shll).communicate()[0])
 def pretty(msg):
@@ -125,16 +130,19 @@ class ThreadingSync(Thread):
             hghgSync(self.shell)
 
 def DoUpdate(vcs, branch, useub, haveparent, upstreambranch, parent, recursive):
+    global success
+    global error
     if not useub: upstreambranch = branch
     thrd = ThreadingSync(vcs,branch, upstreambranch, recursive)
     thrd.setDaemon(True)
     thrd.start()
 
-    succ = True
+    failed = True
     mustend = time.time() + 120
     while time.time() < mustend:
         if thrd.is_alive(): time.sleep(0.25)  
         else: 
+            success+=1
             print(" --> successful synchronized :)")
             if haveparent:
                 print(">>>>>>>>> Parent update: %s" % parent)
@@ -151,12 +159,15 @@ def DoUpdate(vcs, branch, useub, haveparent, upstreambranch, parent, recursive):
                         succp = False
                         break
                 if succp: print(" --> %s : timed out :(" % parent)
-            succ = False
+            failed = False
             break
-    if succ: print(" --> %s : timed out :(" % r)
+    if failed: 
+        error+=1
+        print(" --> %s : timed out :(" % r)
 
 def SyncStarter(repo, recursive):
     global fst
+    global total
     
     vcs = VCS.git
     useub = False
@@ -170,7 +181,6 @@ def SyncStarter(repo, recursive):
     pth  = ((r[0]).split(" "))[0]
 
     print("------ Repository: %s ------" % pth)
-
     if len(r) > 1:
         svcs = ((r[1]).split(" "))[1]
         vcs = { 
@@ -204,9 +214,12 @@ def SyncStarter(repo, recursive):
         
     if len(branches) > 1:
         for b in branches:
+            total += 1
             print("--> branch: %s" % b)
             DoUpdate(vcs, b, useub, haveparent, upstreambranch, parent, recursive)
-    else: DoUpdate(vcs, branch, useub, haveparent, upstreambranch, parent, recursive)
+    else:
+        total += 1
+        DoUpdate(vcs, branch, useub, haveparent, upstreambranch, parent, recursive)
     print("______________________________________________________________________")
 
 def syncrepos(repos, recursive): 
@@ -230,8 +243,14 @@ def sync(oz):
         syncrepos(root, False)
 
 print("=====================================================================================")
-print("                     sync: Global repositories synchronizer v.2.5  ")
+print("                     sync: Global repositories synchronizer v.2.6  ")
 print("=====================================================================================")
 
 config = ConfigParser()
 sync(os.name)
+print("  Statistics:  ")
+print("-------------------------------------------------------------------------------------")
+print("      total : %d" % total)
+print("      success : %d" % success)
+print("      errors : %d" % error)
+print("=====================================================================================")
