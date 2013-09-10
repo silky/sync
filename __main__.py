@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+#_____________________________________________________________________________________________
 '''
               sync - Light sync util
           Copyright (C)  2012-2013  Heather
@@ -18,35 +18,34 @@ You should have received a copy of the GNU General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 '''
-
+#_____________________________________________________________________________________________
 import os
 import string
 import time
 from threading import Thread
-
+#_____________________________________________________________________________________________
 #Python 2x / 3x compatibility
 try:  from configparser import ConfigParser 
 except ImportError: 
     from ConfigParser import ConfigParser 
 
 from subprocess import Popen, PIPE
-# ----------------------------------------------------------------------
-
+#_____________________________________________________________________________________________
 class VCS:
     git=0
     git_git=1
     git_mercurial=2
     git_subversion=3
     hg_hg=5
-
+#_____________________________________________________________________________________________
 sudo = False
 fst = True
-
+#_____________________________________________________________________________________________
 #statistics
 total = 0
 success = 0
 error = 0
-
+#_____________________________________________________________________________________________
 def command(x, shll):
     return str(Popen(x.split(' '), stdout=PIPE, shell = shll).communicate()[0])
 def pretty(msg):
@@ -57,7 +56,7 @@ def cmd(q, shll):
     if sudo: return command("".join(["sudo ", q]), shll)
     else:    return command(q, shll)
 def sh(s, shll): pretty(cmd(s,shll))
-
+#_____________________________________________________________________________________________
 def gitSync(branch, upstreambranch, shell):
     sh("".join(["git checkout ", branch]), shell)
     sh("git rebase --abort", shell)
@@ -65,39 +64,39 @@ def gitSync(branch, upstreambranch, shell):
     sh("".join(["git fetch upstream ", upstreambranch]), shell)
     sh("".join(["git pull --rebase upstream ", upstreambranch]), shell)
     sh("".join(["git push -f origin ", branch]), shell)
-
+#_____________________________________________________________________________________________
 def gitPU(branch, shell):
     sh("".join(["git pull origin ", branch]), shell)
     sh("git commit -am submodule", shell)
     sh("".join(["git push -f origin ", branch]), shell)
-
+#_____________________________________________________________________________________________
 def gitgitSync(shell):
     sh("git pull origin master", shell)
     sh("git fetch git master", shell)
     sh("git push -f git master", shell)
-
+#_____________________________________________________________________________________________
 def githgSync(shell):
     sh("hg pull", shell)
     sh("hg update", shell)
     sh("hg push git", shell)
-
+#_____________________________________________________________________________________________
 def hghgSync(shell):
     sh("hg pull", shell)
     sh("hg update", shell)
     sh("hg push hg", shell)
-
+#_____________________________________________________________________________________________
 def gitNew(shell):
     status = command("git status", shell).split("\n")
     return [x[14:] for x in status if x.startswith("#\tnew file:   ")]
-
+#_____________________________________________________________________________________________
 def gitModified(shell):
     status = command("git status", shell).split("\n")
     return [x[14:] for x in status if x.startswith("#\tmodified:   ")]
-
+#_____________________________________________________________________________________________
 def checkGitModifications(shell):
     print("New: %s" % gitNew(shell))
     print("Modified: %s" % gitModified(shell))
-
+#_____________________________________________________________________________________________
 class ParentUpdate(Thread):
     def __init__(self, vcs, branch, recursive):
         Thread.__init__(self)
@@ -108,7 +107,7 @@ class ParentUpdate(Thread):
         if self.vcs == VCS.git:
             checkGitModifications(self.shell)
             gitPU(self.branch, self.shell)
-
+#_____________________________________________________________________________________________
 class ThreadingSync(Thread):
     def __init__(self, vcs, branch, upstreambranch, recursive):
         Thread.__init__(self)
@@ -128,7 +127,7 @@ class ThreadingSync(Thread):
             print ("can't sync git from subversion yet")
         elif self.vcs == VCS.hg_hg:
             hghgSync(self.shell)
-
+#_____________________________________________________________________________________________
 def DoUpdate(vcs, branch, useub, haveparent, upstreambranch, parent, recursive):
     global success
     global error
@@ -164,7 +163,7 @@ def DoUpdate(vcs, branch, useub, haveparent, upstreambranch, parent, recursive):
     if failed: 
         error+=1
         print(" --> %s : timed out :(" % r)
-
+#_____________________________________________________________________________________________
 def SyncStarter(repo, recursive):
     global fst
     global total
@@ -221,36 +220,34 @@ def SyncStarter(repo, recursive):
         total += 1
         DoUpdate(vcs, branch, useub, haveparent, upstreambranch, parent, recursive)
     print("______________________________________________________________________")
-
+#_____________________________________________________________________________________________
 def syncrepos(repos, recursive): 
     for r in repos.split("\n"): 
         if r: SyncStarter(r, recursive)
-
-def sync(oz): 
-    global sudo
-    if oz == 'nt':
-        config.readfp(open('repolist.conf'))
-        syncrepos( config.get('Repos','user') , True)
-    else:
-        config.readfp(open('/etc/repolist.conf'))
-        if os.geteuid() == 0:
-            print("warning: running from root, only root repositories is syncing")
-        else:
-            user = config.get('Repos','user')
-            syncrepos(user, False)
-            sudo = True
-        root = config.get('Repos','sudo')
-        syncrepos(root, False)
-
+#_____________________________________________________________________________________________
 print("=====================================================================================")
-print("                     sync: Global repositories synchronizer v.2.6  ")
+print("                     sync: Global repositories synchronizer v.2.7  ")
 print("=====================================================================================")
-
+#_____________________________________________________________________________________________
 config = ConfigParser()
-sync(os.name)
+if os.name == 'nt':
+    config.readfp(open('repolist.conf'))
+    syncrepos( config.get('Repos','user') , True)
+else:
+    config.readfp(open('/etc/repolist.conf'))
+    if os.geteuid() == 0:
+        print("warning: running from root, only root repositories is syncing")
+    else:
+        user = config.get('Repos','user')
+        syncrepos(user, False)
+        sudo = True
+    root = config.get('Repos','sudo')
+    syncrepos(root, False)
+#_____________________________________________________________________________________________
 print("  Statistics:  ")
 print("-------------------------------------------------------------------------------------")
 print("      total : %d" % total)
 print("      success : %d" % success)
 print("      errors : %d" % error)
 print("=====================================================================================")
+#_____________________________________________________________________________________________
