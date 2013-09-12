@@ -41,17 +41,17 @@ def cmd(q, shll):
 def sh(s, shll): pretty(cmd(s,shll))
 #_____________________________________________________________________________________________
 def gitSync(branch, upstreambranch, shell):
-    sh("".join(["git checkout ", branch]), shell)
+    sh("git checkout %s" % branch, shell)
     sh("git rebase --abort", shell)
-    sh("".join(["git pull origin ", branch]), shell)
-    sh("".join(["git fetch upstream ", upstreambranch]), shell)
-    sh("".join(["git pull --rebase upstream ", upstreambranch]), shell)
-    sh("".join(["git push -f origin ", branch]), shell)
+    sh("git pull origin %s" % branch, shell)
+    sh("git fetch upstream %s" % upstreambranch, shell)
+    sh("git pull --rebase upstream %s" % upstreambranch, shell)
+    sh("git push -f origin %s" % branch, shell)
 #_____________________________________________________________________________________________
 def gitPU(branch, shell):
-    sh("".join(["git pull origin ", branch]), shell)
+    sh("git pull origin %s" % branch, shell)
     sh("git commit -am submodule", shell)
-    sh("".join(["git push -f origin ", branch]), shell)
+    sh("git push -f origin %s" % branch, shell)
 #_____________________________________________________________________________________________
 def gitgitSync(shell):
     sh("git pull origin master", shell)
@@ -163,45 +163,62 @@ def SyncStarter(repo, recursive):
     pth  = ((r[0]).split(" "))[0]
 
     print("------ Repository: %s ------" % pth)
-    if len(r) > 1:
-        svcs = ((r[1]).split(" "))[1]
-        vcs = { 
-            'git'       : VCS.git,
-            'git git'   : VCS.git_git,
-            'git hg'    : VCS.git_mercurial,
-            'git svn'   : VCS.git_subversion,
-            'hg hg'     : VCS.hg_hg}[svcs]
 
-    t = repo.split(" -b")   # <----- Branch
-    if len(t) > 1:
-        branch = ((t[1]).split(" ")[1])
-        branches = branch.split(",")
-    pb = repo.split(" -u") # <----- Upstream Branch
-    if len(pb) > 1:
-        useub = True
-        upstreambranch = ((pb[1]).split(" ")[1])
-    sbm = repo.split(" -p") # <----- Submodule Parents
-    if len(sbm) > 1:
-        haveparent = True
-        parent = ((sbm[1]).split(" ")[1])
-
-    if recursive:
-        if fst: 
-            fst = False
-            os.chdir(pth)
-        else:
-            os.chdir("..")
-            os.chdir(pth)
-    else: os.chdir(pth)
-        
-    if len(branches) > 1:
-        for b in branches:
-            total += 1
-            print("--> branch: %s" % b)
-            DoUpdate(vcs, b, useub, haveparent, upstreambranch, parent, recursive)
+    if pth.startswith('git@'):
+        vcs = VCS.git
+        if not recursive:
+            if not os.path.exists('/usr/share/sync/git'):
+                os.makedirs('/usr/share/sync/git')
+        gitp = (((r[0]).split("/"))[1].split("."))[0]
+        pdir =  'sync-%s' % gitp \
+            if recursive else \
+                '/usr/share/sync/git/%s' % gitp \
+            #STUPID PYTHON SYNTAX APPEARS...
+        uptodate = False
+        if not os.path.exists(pdir):
+            sh("git clone %s %s" % (pth, pdir), recursive)
+            uptodate = True
+        #TODO: rewrite this part...
     else:
-        total += 1
-        DoUpdate(vcs, branch, useub, haveparent, upstreambranch, parent, recursive)
+        if len(r) > 1:
+            svcs = ((r[1]).split(" "))[1]
+            vcs = { 
+                'git'       : VCS.git,
+                'git git'   : VCS.git_git,
+                'git hg'    : VCS.git_mercurial,
+                'git svn'   : VCS.git_subversion,
+                'hg hg'     : VCS.hg_hg}[svcs]
+
+        t = repo.split(" -b")   # <----- Branch
+        if len(t) > 1:
+            branch = ((t[1]).split(" ")[1])
+            branches = branch.split(",")
+        pb = repo.split(" -u") # <----- Upstream Branch
+        if len(pb) > 1:
+            useub = True
+            upstreambranch = ((pb[1]).split(" ")[1])
+        sbm = repo.split(" -p") # <----- Submodule Parents
+        if len(sbm) > 1:
+            haveparent = True
+            parent = ((sbm[1]).split(" ")[1])
+
+        if recursive:
+            if fst: 
+                fst = False
+                os.chdir(pth)
+            else:
+                os.chdir("..")
+                os.chdir(pth)
+        else: os.chdir(pth)
+            
+        if len(branches) > 1:
+            for b in branches:
+                total += 1
+                print("--> branch: %s" % b)
+                DoUpdate(vcs, b, useub, haveparent, upstreambranch, parent, recursive)
+        else:
+            total += 1
+            DoUpdate(vcs, branch, useub, haveparent, upstreambranch, parent, recursive)
     print("______________________________________________________________________")
 #_____________________________________________________________________________________________
 def syncrepos(repos, recursive): 
@@ -209,7 +226,7 @@ def syncrepos(repos, recursive):
         if r: SyncStarter(r, recursive)
 #_____________________________________________________________________________________________
 print("======================================================================")
-print("         sync: Global repositories synchronizer v.2.7  ")
+print("         sync: Global repositories synchronizer v.2.8  ")
 print("======================================================================")
 #_____________________________________________________________________________________________
 config = ConfigParser()
