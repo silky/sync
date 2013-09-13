@@ -40,12 +40,12 @@ def cmd(q, shll):
     else:    return command(q, shll)
 def sh(s, shll): pretty(cmd(s,shll))
 #_____________________________________________________________________________________________
-def gitSync(branch, upstreambranch, shell):
+def gitSync(branch, upstream, upstreambranch, shell):
     sh("git checkout %s" % branch, shell)
     sh("git rebase --abort", shell)
     sh("git pull origin %s" % branch, shell)
-    sh("git fetch upstream %s" % upstreambranch, shell)
-    sh("git pull --rebase upstream %s" % upstreambranch, shell)
+    sh("git fetch %s %s" % (upstream, upstreambranch), shell)
+    sh("git pull --rebase %s %s" % (upstream, upstreambranch), shell)
     sh("git push -f origin %s" % branch, shell)
 #_____________________________________________________________________________________________
 def gitPU(branch, shell):
@@ -92,16 +92,17 @@ class ParentUpdate(Thread):
             gitPU(self.branch, self.shell)
 #_____________________________________________________________________________________________
 class ThreadingSync(Thread):
-    def __init__(self, vcs, branch, upstreambranch, recursive):
+    def __init__(self, vcs, branch, upstream, upstreambranch, shell):
         Thread.__init__(self)
         self.vcs = vcs
         self.branch = branch
+        self.upstream = upstream
         self.upstreambranch = upstreambranch
-        self.shell = recursive
+        self.shell = shell
     def run(self):
         if self.vcs == VCS.git:
             checkGitModifications(self.shell)
-            gitSync(self.branch, self.upstreambranch, self.shell)
+            gitSync(self.branch, self.upstream, self.upstreambranch, self.shell)
         elif self.vcs == VCS.git_git:
             gitgitSync(self.shell)
         elif self.vcs == VCS.git_mercurial:
@@ -111,11 +112,11 @@ class ThreadingSync(Thread):
         elif self.vcs == VCS.hg_hg:
             hghgSync(self.shell)
 #_____________________________________________________________________________________________
-def DoUpdate(vcs, branch, useub, haveparent, upstreambranch, parent, recursive):
+def DoUpdate(vcs, branch, useub, haveparent,upstream, upstreambranch, parent, shell):
     global success
     global error
     if not useub: upstreambranch = branch
-    thrd = ThreadingSync(vcs,branch, upstreambranch, recursive)
+    thrd = ThreadingSync(vcs,branch,upstream, upstreambranch, shell)
     thrd.setDaemon(True)
     thrd.start()
 
@@ -129,7 +130,7 @@ def DoUpdate(vcs, branch, useub, haveparent, upstreambranch, parent, recursive):
             if haveparent:
                 print(">>>>>>>>> Parent update: %s" % parent)
                 os.chdir( parent.strip() )
-                thrdp = ParentUpdate(vcs, branch, recursive)
+                thrdp = ParentUpdate(vcs, branch, shell)
                 thrdp.setDaemon(True)
                 thrdp.start()
                 succp = True
@@ -147,7 +148,7 @@ def DoUpdate(vcs, branch, useub, haveparent, upstreambranch, parent, recursive):
         error+=1
         print(" --> %s : timed out :(" % r)
 #_____________________________________________________________________________________________
-def SyncStarter(repo, recursive):
+def SyncStarter(repo, shell):
     global fst
     global total
     
@@ -160,73 +161,76 @@ def SyncStarter(repo, recursive):
     upstreambranch = ''
 
     r = repo.split(" -t")
-    pth  = ((r[0]).split(" "))[0]
+    rpth = ((r[0]).split(" "))
+    pth  = rpth[0]
 
     print("------ Repository: %s ------" % pth)
 
+    if len(r) > 1:
+        svcs = ((r[1]).split(" "))[1]
+        vcs = { 
+            'git'       : VCS.git,
+            'git git'   : VCS.git_git,
+            'git hg'    : VCS.git_mercurial,
+            'git svn'   : VCS.git_subversion,
+            'hg hg'     : VCS.hg_hg}[svcs]
+
+    t = repo.split(" -b")   # <----- Branch
+    if len(t) > 1:
+        branch = ((t[1]).split(" ")[1])
+        branches = branch.split(",")
+    pb = repo.split(" -u") # <----- Upstream Branch
+    if len(pb) > 1:
+        useub = True
+        upstreambranch = ((pb[1]).split(" ")[1])
+    sbm = repo.split(" -p") # <----- Submodule Parents
+    if len(sbm) > 1:
+        haveparent = True
+        parent = ((sbm[1]).split(" ")[1])
+
+    pdir = pth; upstream = 'upstream'
     if pth.startswith('git@'):
+        if len(rpth) > 1:
+            upstream = rpth[1]
+            print(" --> upstream: %s" % upstream)
+        else: 
+            print(" --> %s : Failed to get upstream branch :(" % pth)
+            return
         vcs = VCS.git
-        if not recursive:
+        if not shell:
             if not os.path.exists('/usr/share/sync/git'):
                 os.makedirs('/usr/share/sync/git')
         gitp = (((r[0]).split("/"))[1].split("."))[0]
-        pdir =  'sync-%s' % gitp \
-            if recursive else \
-                '/usr/share/sync/git/%s' % gitp \
-            #STUPID PYTHON SYNTAX APPEARS...
-        uptodate = False
+        pdir = { True: 'sync-%s'
+               , False: '/usr/share/git/%s'} [shell] % gitp
         if not os.path.exists(pdir):
-            sh("git clone %s %s" % (pth, pdir), recursive)
-            uptodate = True
-        #TODO: rewrite this part...
-    else:
-        if len(r) > 1:
-            svcs = ((r[1]).split(" "))[1]
-            vcs = { 
-                'git'       : VCS.git,
-                'git git'   : VCS.git_git,
-                'git hg'    : VCS.git_mercurial,
-                'git svn'   : VCS.git_subversion,
-                'hg hg'     : VCS.hg_hg}[svcs]
+            sh("git clone %s %s" % (pth, pdir), shell)
 
-        t = repo.split(" -b")   # <----- Branch
-        if len(t) > 1:
-            branch = ((t[1]).split(" ")[1])
-            branches = branch.split(",")
-        pb = repo.split(" -u") # <----- Upstream Branch
-        if len(pb) > 1:
-            useub = True
-            upstreambranch = ((pb[1]).split(" ")[1])
-        sbm = repo.split(" -p") # <----- Submodule Parents
-        if len(sbm) > 1:
-            haveparent = True
-            parent = ((sbm[1]).split(" ")[1])
-
-        if recursive:
-            if fst: 
-                fst = False
-                os.chdir(pth)
-            else:
-                os.chdir("..")
-                os.chdir(pth)
-        else: os.chdir(pth)
-            
-        if len(branches) > 1:
-            for b in branches:
-                total += 1
-                print("--> branch: %s" % b)
-                DoUpdate(vcs, b, useub, haveparent, upstreambranch, parent, recursive)
+    if shell:
+        if fst: 
+            fst = False
+            os.chdir(pdir)
         else:
+            os.chdir("..")
+            os.chdir(pdir)
+    else: os.chdir(pdir)
+        
+    if len(branches) > 1:
+        for b in branches:
             total += 1
-            DoUpdate(vcs, branch, useub, haveparent, upstreambranch, parent, recursive)
+            print("--> branch: %s" % b)
+            DoUpdate(vcs, b, useub, haveparent, upstream, upstreambranch, parent, shell)
+    else:
+        total += 1
+        DoUpdate(vcs, branch, useub, haveparent, upstream, upstreambranch, parent, shell)
     print("______________________________________________________________________")
 #_____________________________________________________________________________________________
-def syncrepos(repos, recursive): 
+def syncrepos(repos, shell): 
     for r in repos.split("\n"): 
-        if r: SyncStarter(r, recursive)
+        if r: SyncStarter(r, shell)
 #_____________________________________________________________________________________________
 print("======================================================================")
-print("         sync: Global repositories synchronizer v.2.8  ")
+print("         sync: Global repositories synchronizer v.3.0  ")
 print("======================================================================")
 #_____________________________________________________________________________________________
 config = ConfigParser()
