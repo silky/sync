@@ -11,7 +11,6 @@ from threading import Thread
 try:  from configparser import ConfigParser 
 except ImportError: 
     from ConfigParser import ConfigParser 
-
 from subprocess import Popen, PIPE
 #_____________________________________________________________________________________________
 class VCS:
@@ -21,13 +20,11 @@ class VCS:
     git_subversion=3
     hg_hg=5
 #_____________________________________________________________________________________________
-sudo = False
-fst = True
+#misc global variables
+sudo = False; fst = True
 #_____________________________________________________________________________________________
 #statistics global variables
-total = 0
-success = 0
-error = 0
+total = 0; success = 0; error = 0
 #_____________________________________________________________________________________________
 class shellrunner():
     def __init__(self, shell):
@@ -118,7 +115,7 @@ def DoUpdate(vcs, branch, useub, haveparent,upstream, upstreambranch, parent, sh
     thrd.setDaemon(True)
     thrd.start()
 
-    failed = True
+    failed = True # Because not success yet
     mustend = time.time() + 120
     while time.time() < mustend:
         if thrd.is_alive(): time.sleep(0.25)  
@@ -187,6 +184,7 @@ def SyncStarter(repo, shell):
         parent = ((sbm[1]).split(" ")[1])
 
     pdir = pth; upstream = 'upstream'
+    if shell and not fst: os.chdir("..")
     if pth.startswith('git@'):
         if len(rpth) > 1:
             upstream = rpth[1]
@@ -205,15 +203,9 @@ def SyncStarter(repo, shell):
             e = shellrunner(shell)
             e.sh("git clone %s %s" % (pth, pdir))
 
-    if shell:
-        if fst: 
-            fst = False
-            os.chdir(pdir)
-        else:
-            os.chdir("..")
-            os.chdir(pdir)
-    else: os.chdir(pdir)
-        
+    if shell and fst: fst = False
+    os.chdir(pdir)
+
     if len(branches) > 1:
         for b in branches:
             total += 1
@@ -229,7 +221,7 @@ def syncrepos(repos, shell):
         if r: SyncStarter(r, shell)
 #_____________________________________________________________________________________________
 print("======================================================================")
-print("         sync: Global repositories synchronizer v.3.1  ")
+print("         sync: Global repositories synchronizer v.3.2  ")
 print("======================================================================")
 #_____________________________________________________________________________________________
 config = ConfigParser()
