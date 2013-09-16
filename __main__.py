@@ -24,72 +24,76 @@ class VCS:
 sudo = False
 fst = True
 #_____________________________________________________________________________________________
-#statistics
+#statistics global variables
 total = 0
 success = 0
 error = 0
 #_____________________________________________________________________________________________
-def command(x, shll):
-    return str(Popen(x.split(' '), stdout=PIPE, shell = shll).communicate()[0])
-def pretty(msg):
-    ss = msg.split("\n")
-    for s in ss: 
-        if not s.startswith("b"): print(s)
-def cmd(q, shll):
-    if sudo: return command("".join(["sudo ", q]), shll)
-    else:    return command(q, shll)
-def sh(s, shll): pretty(cmd(s,shll))
+class shellrunner():
+    def __init__(self, shell):
+        self.shell = shell
+    def command(self, x):
+        return str(Popen(x.split(' ')
+            , stdout    = PIPE
+            , shell     = self.shell).communicate()[0])
+    def pretty(self, msg):
+        ss = msg.split("\n")
+        for s in ss: 
+            if not s.startswith("b"): print(s)
+    def cmd(self, q):
+        if sudo: return self.command("sudo %s" % q)
+        else:    return self.command(q)
+    def sh(self, s): self.pretty(self.cmd(s))
 #_____________________________________________________________________________________________
-def gitSync(branch, upstream, upstreambranch, shell):
-    sh("git checkout %s" % branch, shell)
-    sh("git rebase --abort", shell)
-    sh("git pull origin %s" % branch, shell)
-    sh("git fetch %s %s" % (upstream, upstreambranch), shell)
-    sh("git pull --rebase %s %s" % (upstream, upstreambranch), shell)
-    sh("git push -f origin %s" % branch, shell)
+def gitSync(branch, upstream, upstreambranch, e):
+    e.sh("git checkout %s" % branch)
+    e.sh("git rebase --abort")
+    e.sh("git pull origin %s" % branch)
+    e.sh("git fetch %s %s" % (upstream, upstreambranch))
+    e.sh("git pull --rebase %s %s" % (upstream, upstreambranch))
+    e.sh("git push -f origin %s" % branch)
 #_____________________________________________________________________________________________
-def gitPU(branch, shell):
-    sh("git pull origin %s" % branch, shell)
-    sh("git commit -am submodule", shell)
-    sh("git push -f origin %s" % branch, shell)
+def gitPU(branch, e):
+    e.sh("git pull origin %s" % branch)
+    e.sh("git commit -am submodule")
+    e.sh("git push -f origin %s" % branch)
 #_____________________________________________________________________________________________
-def gitgitSync(shell):
-    sh("git pull origin master", shell)
-    sh("git fetch git master", shell)
-    sh("git push -f git master", shell)
+def gitgitSync(e):
+    e.sh("git pull origin master")
+    e.sh("git fetch git master")
+    e.sh("git push -f git master")
 #_____________________________________________________________________________________________
-def githgSync(shell):
-    sh("hg pull", shell)
-    sh("hg update", shell)
-    sh("hg push git", shell)
+def githgSync(e):
+    e.sh("hg pull")
+    e.sh("hg update")
+    e.sh("hg push git")
 #_____________________________________________________________________________________________
-def hghgSync(shell):
-    sh("hg pull", shell)
-    sh("hg update", shell)
-    sh("hg push hg", shell)
+def hghgSync(e):
+    e.sh("hg pull")
+    e.sh("hg update")
+    e.sh("hg push hg")
 #_____________________________________________________________________________________________
-def gitNew(shell):
-    status = command("git status", shell).split("\n")
+def gitNew(e, status):
     return [x[14:] for x in status if x.startswith("#\tnew file:   ")]
 #_____________________________________________________________________________________________
-def gitModified(shell):
-    status = command("git status", shell).split("\n")
+def gitModified(e, status):
     return [x[14:] for x in status if x.startswith("#\tmodified:   ")]
 #_____________________________________________________________________________________________
-def checkGitModifications(shell):
-    print("New: %s" % gitNew(shell))
-    print("Modified: %s" % gitModified(shell))
+def checkGitModifications(e):
+    status = e.command("git status").split("\n")
+    print("New: %s" % gitNew(e, status))
+    print("Modified: %s" % gitModified(e, status))
 #_____________________________________________________________________________________________
 class ParentUpdate(Thread):
-    def __init__(self, vcs, branch, recursive):
+    def __init__(self, vcs, branch, shell):
         Thread.__init__(self)
         self.vcs = vcs
         self.branch = branch
-        self.shell = recursive
+        self.e = shellrunner(shell)
     def run(self):
         if self.vcs == VCS.git:
-            checkGitModifications(self.shell)
-            gitPU(self.branch, self.shell)
+            checkGitModifications(self.e)
+            gitPU(self.branch, self.e)
 #_____________________________________________________________________________________________
 class ThreadingSync(Thread):
     def __init__(self, vcs, branch, upstream, upstreambranch, shell):
@@ -98,19 +102,19 @@ class ThreadingSync(Thread):
         self.branch = branch
         self.upstream = upstream
         self.upstreambranch = upstreambranch
-        self.shell = shell
+        self.e = shellrunner(shell)
     def run(self):
         if self.vcs == VCS.git:
-            checkGitModifications(self.shell)
-            gitSync(self.branch, self.upstream, self.upstreambranch, self.shell)
+            checkGitModifications(self.e)
+            gitSync(self.branch, self.upstream, self.upstreambranch, self.e)
         elif self.vcs == VCS.git_git:
-            gitgitSync(self.shell)
+            gitgitSync(self.e)
         elif self.vcs == VCS.git_mercurial:
-            githgSync(self.shell)
+            githgSync(self.e)
         elif self.vcs == VCS.git_subversion:
             print ("can't sync git from subversion yet")
         elif self.vcs == VCS.hg_hg:
-            hghgSync(self.shell)
+            hghgSync(self.e)
 #_____________________________________________________________________________________________
 def DoUpdate(vcs, branch, useub, haveparent,upstream, upstreambranch, parent, shell):
     global success
@@ -204,7 +208,8 @@ def SyncStarter(repo, shell):
         pdir = { True: 'sync-%s'
                , False: '/usr/share/git/%s'} [shell] % gitp
         if not os.path.exists(pdir):
-            sh("git clone %s %s" % (pth, pdir), shell)
+            e = shellrunner(shell)
+            e.sh("git clone %s %s" % (pth, pdir))
 
     if shell:
         if fst: 
