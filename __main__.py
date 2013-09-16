@@ -184,7 +184,9 @@ def SyncStarter(repo, shell):
         parent = ((sbm[1]).split(" ")[1])
 
     pdir = pth; upstream = 'upstream'
-    if shell and not fst: os.chdir("..")
+    if shell:
+        if fst: fst = False
+        else: os.chdir("..")
     if pth.startswith('git@'):
         if len(rpth) > 1:
             upstream = rpth[1]
@@ -202,10 +204,8 @@ def SyncStarter(repo, shell):
         if not os.path.exists(pdir):
             e = shellrunner(shell)
             e.sh("git clone %s %s" % (pth, pdir))
-
-    if shell and fst: fst = False
+ 
     os.chdir(pdir)
-
     if len(branches) > 1:
         for b in branches:
             total += 1
