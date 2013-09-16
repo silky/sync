@@ -146,6 +146,7 @@ def DoUpdate(vcs, branch, useub, haveparent,upstream, upstreambranch, parent, sh
 def SyncStarter(repo, shell):
     global fst
     global total
+    global error
     
     vcs = VCS.git
     useub = False
@@ -204,16 +205,20 @@ def SyncStarter(repo, shell):
         if not os.path.exists(pdir):
             e = shellrunner(shell)
             e.sh("git clone %s %s" % (pth, pdir))
- 
-    os.chdir(pdir)
-    if len(branches) > 1:
-        for b in branches:
+
+    if os.path.exists(pdir):
+        os.chdir(pdir)
+        if len(branches) > 1:
+            for b in branches:
+                total += 1
+                print("--> branch: %s" % b)
+                DoUpdate(vcs, b, useub, haveparent, upstream, upstreambranch, parent, shell)
+        else:
             total += 1
-            print("--> branch: %s" % b)
-            DoUpdate(vcs, b, useub, haveparent, upstream, upstreambranch, parent, shell)
-    else:
-        total += 1
-        DoUpdate(vcs, branch, useub, haveparent, upstream, upstreambranch, parent, shell)
+            DoUpdate(vcs, branch, useub, haveparent, upstream, upstreambranch, parent, shell)
+    else: 
+        error+=1
+        print(" --> Failed, no such dir: %s :(" % pdir)
     print("______________________________________________________________________")
 #_____________________________________________________________________________________________
 def syncrepos(repos, shell): 
@@ -221,7 +226,7 @@ def syncrepos(repos, shell):
         if r: SyncStarter(r, shell)
 #_____________________________________________________________________________________________
 print("======================================================================")
-print("         sync: Global repositories synchronizer v.3.2  ")
+print("         sync: Global repositories synchronizer v.3.3  ")
 print("======================================================================")
 #_____________________________________________________________________________________________
 config = ConfigParser()
