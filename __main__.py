@@ -73,16 +73,10 @@ def hghgSync(e):
     e.sh("hg update")
     e.sh("hg push hg")
 #_____________________________________________________________________________________________
-def gitNew(e, status):
-    return [x[14:] for x in status if x.startswith("#\tnew file:   ")]
-#_____________________________________________________________________________________________
-def gitModified(e, status):
-    return [x[14:] for x in status if x.startswith("#\tmodified:   ")]
-#_____________________________________________________________________________________________
 def checkGitModifications(e):
     status = e.command("git status").split("\n")
-    print("New: %s" % gitNew(e, status))
-    print("Modified: %s" % gitModified(e, status))
+    print("New: %s"         % [x[14:] for x in status if x.startswith("#\tnew file:   ")])
+    print("Modified: %s"    % [x[14:] for x in status if x.startswith("#\tmodified:   ")])
 #_____________________________________________________________________________________________
 class ParentUpdate(Thread):
     def __init__(self, vcs, branch, shell):
