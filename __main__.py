@@ -21,7 +21,8 @@ class VCS:
     hg_hg=5
 #_____________________________________________________________________________________________
 #misc global variables
-sudo = False; fst = True
+sudo = False
+fst = True
 #_____________________________________________________________________________________________
 #statistics global variables
 total = 0; success = 0; error = 0
@@ -33,14 +34,10 @@ class shellrunner():
         return str(Popen(x.split(' ')
             , stdout    = PIPE
             , shell     = self.shell).communicate()[0])
-    def pretty(self, msg):
-        ss = msg.split("\n")
-        for s in ss: 
+    def sh(self, s):
+        for s in (       self.command("sudo %s" % s) \
+            if sudo else self.command(s)).split("\n"):
             if not s.startswith("b"): print(s)
-    def cmd(self, q):
-        if sudo: return self.command("sudo %s" % q)
-        else:    return self.command(q)
-    def sh(self, s): self.pretty(self.cmd(s))
 #_____________________________________________________________________________________________
 def gitSync(branch, upstream, upstreambranch, e):
     e.sh("git checkout %s" % branch)
