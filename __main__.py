@@ -108,12 +108,12 @@ def DoUpdate(vcs, branch, useub, haveparent,upstream, upstreambranch, parent, sh
     global success
     global error
     if not useub: upstreambranch = branch
-    thrd = ThreadingSync(vcs,branch,upstream, upstreambranch, shell)
+    thrd = ThreadingSync(vcs, branch, upstream, upstreambranch, shell)
     thrd.setDaemon(True)
     thrd.start()
 
     failed = True # Because not success yet
-    mustend = time.time() + 120
+    mustend = time.time() + 180
     while time.time() < mustend:
         if thrd.is_alive(): time.sleep(0.25)  
         else: 
@@ -126,7 +126,7 @@ def DoUpdate(vcs, branch, useub, haveparent,upstream, upstreambranch, parent, sh
                 thrdp.setDaemon(True)
                 thrdp.start()
                 succp = True
-                mustendp = time.time() + 120
+                mustendp = time.time() + 180
                 while time.time() < mustendp:
                     if thrdp.is_alive(): time.sleep(0.25)  
                     else: 
@@ -138,7 +138,7 @@ def DoUpdate(vcs, branch, useub, haveparent,upstream, upstreambranch, parent, sh
             break
     if failed: 
         error+=1
-        print(" --> %s : timed out :(" % r)
+        print(" --> timed out :(")
 #_____________________________________________________________________________________________
 def SyncStarter(repo, shell):
     global fst
@@ -223,7 +223,7 @@ def syncrepos(repos, shell):
         if r: SyncStarter(r, shell)
 #_____________________________________________________________________________________________
 print("======================================================================")
-print("         sync: Global repositories synchronizer v.3.3  ")
+print("         sync: Global repositories synchronizer v.3.4  ")
 print("======================================================================")
 #_____________________________________________________________________________________________
 config = ConfigParser()
