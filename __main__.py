@@ -221,9 +221,20 @@ def SyncStarter(repo, shell):
 def syncrepos(repos, shell): 
     for r in repos.split("\n"): 
         if r: SyncStarter(r, shell)
+def syncgentoo(gentoo-x86):
+    if os.path.exists(gentoo-x86):
+        total += 1
+        os.chdir(gentoo-x86)
+        e = shellrunner(False)
+        print( "##====---- pulling gentoo-x86 ----====##" )
+        e.sh("cvs update")
+        print( "##====---- regen cache for ::gentoo-x86 ----====##" )
+        e.sh("egencache --update --repo=gentoo --portdir=%s --jobs=\"$(($(nproc) + 1))\"" % gentoo-x86)
+        success += 1
+    else: print("wrong gentoo-x86 path: %s" % gentoo-x86)
 #_____________________________________________________________________________________________
 print("======================================================================")
-print("         sync: Global repositories synchronizer v.3.4  ")
+print("         sync: Global repositories synchronizer v.3.5  ")
 print("======================================================================")
 #_____________________________________________________________________________________________
 config = ConfigParser()
@@ -238,8 +249,12 @@ else:
         user = config.get('Repos','user')
         syncrepos(user, False)
         sudo = True
+    # -> Root
     root = config.get('Repos','sudo')
     syncrepos(root, False)
+    # -> Gentoo-x86:
+    gentoo-x86 = config.get('Gentoo', 'gentoo-x86')
+    syncgentoo(gentoo-x86)
 #_____________________________________________________________________________________________
 print("  Statistics:  ")
 print("----------------------------------------------------------------------")

@@ -6,3 +6,5 @@ user:
   /home/nen/contrib/mono/FAKE -t git -b develop
 sudo:
   /home/gentoo-haskell
+[Gentoo]
+gentoo-x86: /home/gentoo-x86
