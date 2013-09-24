@@ -246,8 +246,8 @@ if os.name == 'nt':
     config.readfp(open('repolist.conf'))
     syncrepos( config.get('Repos','user') , True)
 else:
+    config.readfp(open('/etc/repolist.conf'))
     if not options.gentoo:
-        config.readfp(open('/etc/repolist.conf'))
         if os.geteuid() == 0:
             print("warning: running from root, only root repositories is syncing")
         else:
