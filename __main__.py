@@ -6,6 +6,7 @@ import os
 import string
 import time
 from threading import Thread
+from optparse import OptionParser
 #_____________________________________________________________________________________________
 #Python 2x / 3x compatibility
 try:  from configparser import ConfigParser 
@@ -232,24 +233,30 @@ def syncgentoo(gentoo_x86):
     else: print("wrong gentoo-x86 path: %s" % gentoo_x86)
 #_____________________________________________________________________________________________
 print("======================================================================")
-print("         sync: Global repositories synchronizer v.3.5  ")
+print("         sync: Global repositories synchronizer v.3.6  ")
 print("======================================================================")
 #_____________________________________________________________________________________________
+parser = OptionParser()
+parser.add_option("-g", "--gentoo",
+                  action="store_true", dest="gentoo", default=False,
+                  help="only sync Genoo-xf86")
+(options, args) = parser.parse_args()
 config = ConfigParser()
 if os.name == 'nt':
     config.readfp(open('repolist.conf'))
     syncrepos( config.get('Repos','user') , True)
 else:
-    config.readfp(open('/etc/repolist.conf'))
-    if os.geteuid() == 0:
-        print("warning: running from root, only root repositories is syncing")
-    else:
-        user = config.get('Repos','user')
-        syncrepos(user, False)
-        sudo = True
-    # -> Root
-    root = config.get('Repos','sudo')
-    syncrepos(root, False)
+    if not options.gentoo:
+        config.readfp(open('/etc/repolist.conf'))
+        if os.geteuid() == 0:
+            print("warning: running from root, only root repositories is syncing")
+        else:
+            user = config.get('Repos','user')
+            syncrepos(user, False)
+            sudo = True
+        # -> Root
+        root = config.get('Repos','sudo')
+        syncrepos(root, False)
     # -> Gentoo-x86:
     gentoo_x86 = config.get('Gentoo', 'gentoo-x86')
     syncgentoo(gentoo_x86)
