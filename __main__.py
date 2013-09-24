@@ -229,7 +229,7 @@ def syncgentoo(gentoo_x86):
         print( "##====---- pulling gentoo-x86 ----====##" )
         e.sh("cvs update")
         print( "##====---- regen cache for ::gentoo-x86 ----====##" )
-        e.sh("egencache --update --repo=gentoo --portdir=%s --jobs=\"$(($(nproc) + 1))\"" % gentoo_x86)
+        e.sh("egencache --update --repo=gentoo --portdir=%s --jobs=2" % gentoo_x86)
     else: print("wrong gentoo-x86 path: %s" % gentoo_x86)
 #_____________________________________________________________________________________________
 print("======================================================================")
