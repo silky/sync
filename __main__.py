@@ -257,9 +257,11 @@ else:
         # -> Root
         root = config.get('Repos','sudo')
         syncrepos(root, False)
-    # -> Gentoo-x86:
-    gentoo_x86 = config.get('Gentoo', 'gentoo-x86')
-    syncgentoo(gentoo_x86)
+    else:
+        # -> Gentoo-x86:
+        if os.geteuid() != 0: sudo = True
+        gentoo_x86 = config.get('Gentoo', 'gentoo-x86')
+        syncgentoo(gentoo_x86)
 #_____________________________________________________________________________________________
 print("  Statistics:  ")
 print("----------------------------------------------------------------------")
