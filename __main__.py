@@ -1,32 +1,34 @@
 #!/usr/bin/env python
-#_____________________________________________________________________________________________
 ''' Copyright (C)  2012-2013  Heather '''
-#_____________________________________________________________________________________________
+
 import os
 import string
 import time
 from threading import Thread
 from optparse import OptionParser
-#_____________________________________________________________________________________________
-#Python 2x / 3x compatibility
+
+# Python 2x / 3x compatibility
 try:  from configparser import ConfigParser 
 except ImportError: 
     from ConfigParser import ConfigParser 
 from subprocess import Popen, PIPE
+
 #_____________________________________________________________________________________________
+
 class VCS:
     git=0
     git_git=1
     git_mercurial=2
     git_subversion=3
     hg_hg=5
-#_____________________________________________________________________________________________
-#misc global variables
+
+# misc global variables
 sudo = False
 fst = True
-#_____________________________________________________________________________________________
-#statistics global variables
+
+# statistics global variables
 total = 0; success = 0; error = 0
+
 #_____________________________________________________________________________________________
 class shellrunner():
     def __init__(self, shell):
@@ -40,6 +42,8 @@ class shellrunner():
             if sudo else self.command(s)).split("\n"):
             if not s.startswith("b"): print(s)
 #_____________________________________________________________________________________________
+# Shell scripts
+
 def gitSync(branch, upstream, upstreambranch, e):
     e.sh("git checkout %s" % branch)
     e.sh("git rebase --abort")
@@ -47,32 +51,35 @@ def gitSync(branch, upstream, upstreambranch, e):
     e.sh("git fetch %s %s" % (upstream, upstreambranch))
     e.sh("git pull --rebase %s %s" % (upstream, upstreambranch))
     e.sh("git push -f origin %s" % branch)
-#_____________________________________________________________________________________________
+
 def gitPU(branch, e):
     e.sh("git pull origin %s" % branch)
     e.sh("git commit -am submodule")
     e.sh("git push -f origin %s" % branch)
-#_____________________________________________________________________________________________
+
 def gitgitSync(e):
     e.sh("git pull origin master")
     e.sh("git fetch git master")
     e.sh("git push -f git master")
-#_____________________________________________________________________________________________
+
 def githgSync(e):
     e.sh("hg pull")
     e.sh("hg update")
     e.sh("hg push git")
-#_____________________________________________________________________________________________
+
 def hghgSync(e):
     e.sh("hg pull")
     e.sh("hg update")
     e.sh("hg push hg")
-#_____________________________________________________________________________________________
+
 def checkGitModifications(e):
     status = e.command("git status").split("\n")
     print("New: %s"         % [x[14:] for x in status if x.startswith("#\tnew file:   ")])
     print("Modified: %s"    % [x[14:] for x in status if x.startswith("#\tmodified:   ")])
+
 #_____________________________________________________________________________________________
+# Threads
+
 class ParentUpdate(Thread):
     def __init__(self, vcs, branch, shell):
         Thread.__init__(self)
@@ -83,7 +90,7 @@ class ParentUpdate(Thread):
         if self.vcs == VCS.git:
             checkGitModifications(self.e)
             gitPU(self.branch, self.e)
-#_____________________________________________________________________________________________
+
 class ThreadingSync(Thread):
     def __init__(self, vcs, branch, upstream, upstreambranch, shell):
         Thread.__init__(self)
@@ -104,7 +111,9 @@ class ThreadingSync(Thread):
             print ("can't sync git from subversion yet")
         elif self.vcs == VCS.hg_hg:
             hghgSync(self.e)
+
 #_____________________________________________________________________________________________
+
 def DoUpdate(vcs, branch, useub, haveparent,upstream, upstreambranch, parent, shell):
     global success
     global error
@@ -140,7 +149,9 @@ def DoUpdate(vcs, branch, useub, haveparent,upstream, upstreambranch, parent, sh
     if failed: 
         error+=1
         print(" --> timed out :(")
+
 #_____________________________________________________________________________________________
+
 def SyncStarter(repo, shell):
     global fst
     global total
@@ -218,7 +229,9 @@ def SyncStarter(repo, shell):
         error+=1
         print(" --> Failed, no such dir: %s :(" % pdir)
     print("______________________________________________________________________")
+
 #_____________________________________________________________________________________________
+
 def syncrepos(repos, shell): 
     for r in repos.split("\n"): 
         if r: SyncStarter(r, shell)
@@ -257,8 +270,7 @@ else:
         # -> Root
         root = config.get('Repos','sudo')
         syncrepos(root, False)
-    else:
-        # -> Gentoo-x86:
+    else: # -> Gentoo-x86:
         if os.geteuid() != 0: sudo = True
         gentoo_x86 = config.get('Gentoo', 'gentoo-x86')
         syncgentoo(gentoo_x86)
