@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-''' Copyright (C)  2012-2013  Heather '''
 
 import os
 import string
@@ -255,12 +254,16 @@ parser.add_option("-g", "--gentoo",
                   help="only sync Genoo-xf86")
 (options, args) = parser.parse_args()
 config = ConfigParser()
-if os.name == 'nt':
+if os.name == 'nt':     # -> Windows
     config.readfp(open('repolist.conf'))
     syncrepos( config.get('Repos','user') , True)
-else:
+else:                   # -> Unix systems
     config.readfp(open('/etc/repolist.conf'))
-    if not options.gentoo:
+    if options.gentoo:  # -> Gentoo-x86:
+        if os.geteuid() != 0: sudo = True
+        gentoo_x86 = config.get('Gentoo', 'gentoo-x86')
+        syncgentoo(gentoo_x86)
+    else:               # -> Default
         if os.geteuid() == 0:
             print("warning: running from root, only root repositories is syncing")
         else:
@@ -270,10 +273,6 @@ else:
         # -> Root
         root = config.get('Repos','sudo')
         syncrepos(root, False)
-    else: # -> Gentoo-x86:
-        if os.geteuid() != 0: sudo = True
-        gentoo_x86 = config.get('Gentoo', 'gentoo-x86')
-        syncgentoo(gentoo_x86)
 #_____________________________________________________________________________________________
 print("  Statistics:  ")
 print("----------------------------------------------------------------------")
