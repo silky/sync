@@ -258,7 +258,7 @@ if os.name == 'nt':     # -> Windows
     config.readfp(open('repolist.conf'))
     syncrepos( config.get('Repos','user') , True)
 else:                   # -> Unix systems
-    config.readfp(open('/etc/repolist.conf'))
+    config.readfp(open(os.path.expanduser('~/.repolist.conf')))
     if options.gentoo:  # -> Gentoo-x86:
         if os.geteuid() != 0: sudo = True
         gentoo_x86 = config.get('Gentoo', 'gentoo-x86')
